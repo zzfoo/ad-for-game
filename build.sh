@@ -1,0 +1,1 @@
+cat ./lib/eventemitter3.js ./src/GoogleAdForGame.js > ./dist/GoogleAdForGame_all.js
