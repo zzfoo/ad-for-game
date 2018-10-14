@@ -339,11 +339,11 @@ if ('undefined' !== typeof module) {
 },{}]},{},[1])(1)
 });
 'use strict';
-var GoogleAd = {};
+var AFG = {};
 (function () {
     var google;
 
-    var EVENTS = GoogleAd.EVENTS = {
+    var EVENTS = AFG.EVENTS = {
         LOADED: 'loaded',
         LOAD_ERROR: 'load_error',
         AD_START: 'ad_start',
@@ -352,7 +352,7 @@ var GoogleAd = {};
         AD_CLICKED: 'ad_clicked',
     }
 
-    var GoogleAdForGameManager = GoogleAd.GoogleAdForGameManager = function () {
+    var AdSenseManager = AFG.AdSenseManager = function () {
 
     }
 
@@ -447,7 +447,7 @@ var GoogleAd = {};
                 name: name,
             });
 
-            var ad = new GoogleAdForGame();
+            var ad = new AdSense();
             ad._init({
                 manager: this,
                 name: name,
@@ -548,14 +548,14 @@ var GoogleAd = {};
     };
 
     for (var p in proto) {
-        GoogleAdForGameManager.prototype[p] = proto[p];
+        AdSenseManager.prototype[p] = proto[p];
     }
 
-    var GoogleAdForGame = GoogleAd.GoogleAdForGame = function () {
+    var AdSense = AFG.AdSense = function () {
         EventEmitter3.call(this);
     }
 
-    var GoogleAdForGameProto = {
+    var AdSenseProto = {
         name: null,
         _manager: null,
         _adsManager: null,
@@ -599,7 +599,7 @@ var GoogleAd = {};
             adsManager.addEventListener(AdEventType.SKIPPED, function() {
                 Me.emit(EVENTS.AD_SKIPPED);
             });
-            
+
             adsManager.addEventListener(AdEventType.USER_CLOSE, function() {
                 Me.emit(EVENTS.AD_END);
             });
@@ -631,9 +631,9 @@ var GoogleAd = {};
         }
     }
     for (var p in EventEmitter3.prototype) {
-        GoogleAdForGame.prototype[p] = EventEmitter3.prototype[p];
+        AdSense.prototype[p] = EventEmitter3.prototype[p];
     }
-    for (var p in GoogleAdForGameProto) {
-        GoogleAdForGame.prototype[p] = GoogleAdForGameProto[p];
+    for (var p in AdSenseProto) {
+        AdSense.prototype[p] = AdSenseProto[p];
     }
 }())

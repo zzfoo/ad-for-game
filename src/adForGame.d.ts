@@ -27,8 +27,8 @@ interface CreateOptions {
     channel: string,
     onAdClosed: ()=>void,
 }
-declare namespace GoogleAd {
-    export class GoogleAdForGame extends EventEmitter{
+declare namespace AFG {
+    export class AdSense extends EventEmitter{
         name: string;
         destroyed: boolean;
         show(): boolean;
@@ -36,7 +36,7 @@ declare namespace GoogleAd {
         destroy();
     }
 
-    export class GoogleAdForGameManager {
+    export class AdSenseManager {
         static EVENTS: {
             LOADED: string,
             LOAD_ERROR: string,
@@ -46,6 +46,6 @@ declare namespace GoogleAd {
             AD_CLICKED: string,
         };
         init(options: InitOptions, callback: ()=>void);
-        createAd(name, options: CreateOptions): GoogleAdForGame;
+        createAd(name, options: CreateOptions): AdSense;
     }
 }

@@ -1,1 +1,1 @@
-cat ./lib/eventemitter3.js ./src/GoogleAdForGame.js > ./dist/GoogleAdForGame_all.js
+cat ./lib/eventemitter3.js ./src/adForGame.js > ./dist/adForGame_all.js & cp ./src/adForGame.js ./dist/adForGame.js
