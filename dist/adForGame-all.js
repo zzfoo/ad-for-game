@@ -338,44 +338,53 @@ if ('undefined' !== typeof module) {
 
 },{}]},{},[1])(1)
 });
-'use strict';
+"use strict";
+
 var AFG = {};
-(function () {
+
+(function() {
     var google;
 
     var EVENTS = AFG.EVENTS = {
-        LOADED: 'loaded',
-        LOAD_ERROR: 'load_error',
-        AD_START: 'ad_start',
-        AD_SKIPPED: 'ad_skipped',
-        AD_END: 'ad_end',
-        AD_CLICKED: 'ad_clicked',
-    }
+        LOADED: "loaded",
+        LOAD_ERROR: "load_error",
+        AD_START: "ad_start",
+        AD_SKIPPED: "ad_skipped",
+        AD_END: "ad_end",
+        AD_CLICKED: "ad_clicked",
+    };
 
-    var AdSenseManager = AFG.AdSenseManager = function () {
-
-    }
+    var AdSenseManager = AFG.AdSenseManager = function() {
+        // do nothing
+    };
 
     var proto = {
         _adIndex: null,
         _adsLoader: null,
         _adCache: null,
         _containerElement: null,
+
+        disabled: false,
+
         // adsRequest: null,
-        init: function (options, callback) {
+        init: function(options, callback) {
+            if (this.disabled) {
+                return false;
+            }
+
             var Me = this;
-            var jsSrc = /* <str> */ "//imasdk.googleapis.com/js/sdkloader/ima3.js" /* </str> */;
-            this._includeJS(jsSrc, function () {
-                google = window['google'];
+            var jsSrc = "//imasdk.googleapis.com/js/sdkloader/ima3.js";
+            this._includeJS(jsSrc, function() {
+                google = window.google;
                 Me._initAdLoader(options);
                 callback && callback();
             });
 
-            window['adsbygoogle'] = window['adsbygoogle'] || [];
+            window.adsbygoogle = window.adsbygoogle || [];
             this._adCache = {};
             this._adIndex = 0;
         },
-        _initAdLoader: function (options) {
+        _initAdLoader: function(options) {
             var adDisplayContainer = this._createAdDisplayContainer(options.containerElement);
             var adsLoader = this._adsLoader = new google.ima.AdsLoader(adDisplayContainer);
             adsLoader.addEventListener(
@@ -388,19 +397,23 @@ var AFG = {};
                 this._onAdsManagerLoadError.bind(this),
                 false);
         },
-        _createAdDisplayContainer: function (containerElement) {
+        _createAdDisplayContainer: function(containerElement) {
             if (!containerElement) {
                 containerElement = this._createContainerElement();
             }
             this._containerElement = containerElement;
             this._showContainerElement(false);
-            var adDisplayContainer = new google["ima"]["AdDisplayContainer"](containerElement);
+            var adDisplayContainer = new google.ima.AdDisplayContainer(containerElement);
             adDisplayContainer.initialize();
             return adDisplayContainer;
         },
-        createAd: function (options) {
+        createAd: function(options) {
+            if (!google) {
+                return false;
+            }
+
             var name = this._generateName();
-            var src = 'https://googleads.g.doubleclick.net/pagead/ads';
+            var src = "https://googleads.g.doubleclick.net/pagead/ads";
             var pageUrl = options.descriptionPage || window.location.href;
 
             var params = {
@@ -430,18 +443,18 @@ var AFG = {};
             // console.log(adTagUrl, width, height);
 
             var adsRequest = new google.ima.AdsRequest();
-            adsRequest.adTagUrl = adTagUrl;
-            adsRequest.forceNonLinearFullSlot = true;
-            adsRequest.linearAdSlotWidth = width;
-            adsRequest.linearAdSlotHeight = height;
-            adsRequest.nonLinearAdSlotWidth = width;
-            adsRequest.nonLinearAdSlotHeight = height;
+            adsRequest["adTagUrl"] = adTagUrl;
+            adsRequest["forceNonLinearFullSlot"] = true;
+            adsRequest["linearAdSlotWidth"] = width;
+            adsRequest["linearAdSlotHeight"] = height;
+            adsRequest["nonLinearAdSlotWidth"] = width;
+            adsRequest["nonLinearAdSlotHeight"] = height;
             // adsRequest.vastLoadTimeout = options.vastLoadTimeout || 5000;
 
             var adsRenderingSettings = new google.ima.AdsRenderingSettings();
-            adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
-            adsRenderingSettings.useStyledNonLinearAds = false;
-            adsRenderingSettings.useStyledLinearAds = false;
+            adsRenderingSettings["restoreCustomPlaybackStateOnAdBreakComplete"] = true;
+            adsRenderingSettings["useStyledNonLinearAds"] = false;
+            adsRenderingSettings["useStyledLinearAds"] = false;
 
             this._adsLoader.requestAds(adsRequest, {
                 name: name,
@@ -458,9 +471,9 @@ var AFG = {};
             return ad;
         },
         _generateName: function() {
-            return 'googleAdForGame_' + (++this._adIndex);
+            return "googleAdForGame_" + (++this._adIndex);
         },
-        _onAdsManagerLoaded: function (adsManagerLoadedEvent) {
+        _onAdsManagerLoaded: function(adsManagerLoadedEvent) {
             var requestContentObject = adsManagerLoadedEvent.getUserRequestContext();
             var name = requestContentObject.name;
             var ad = this._adCache[name];
@@ -470,14 +483,14 @@ var AFG = {};
             }, ad.adsRenderingSettings);
 
             var Me = this;
-            adsManager.addEventListener(google.ima.AdEvent.Type.USER_CLOSE, function (addEvent) {
-                // console.log('USER_CLOSE');
+            adsManager.addEventListener(google.ima.AdEvent.Type.USER_CLOSE, function(addEvent) {
+                // console.log("USER_CLOSE");
                 Me._onAdClosed(name);
             });
 
             ad._onAdsManagerLoaded(adsManager);
         },
-        _onAdsManagerLoadError: function (adErrorEvent) {
+        _onAdsManagerLoadError: function(adErrorEvent) {
             var requestContentObject = adErrorEvent.getUserRequestContext();
             var name = requestContentObject.name;
             var ad = this._adCache[name];
@@ -491,24 +504,24 @@ var AFG = {};
         //     var type = adEvent.type;
         //     var AdEventType = google.ima.AdEvent.Type;
         // },
-        _onAdClosed: function (name) {
-            // console.log('on ad closed: ', name);
+        _onAdClosed: function(name) {
+            // console.log("on ad closed: ", name);
             // this._containerElement.hidden = true;
-            // this._containerElement.style.display = 'none';
+            // this._containerElement.style.display = "none";
             this._showContainerElement(false);
         },
-        _showAd: function (ad) {
+        _showAd: function(ad) {
             // this._containerElement.hidden = false;
             this._showContainerElement(true);
         },
         _destroyAd: function(ad) {
             delete this._adCache[ad.name];
         },
-        _createContainerElement: function () {
+        _createContainerElement: function() {
             var containerElement = document.createElement("div");
             var width = window.innerWidth;
             var height = window.innerHeight;
-            var bgColor = 'black';
+            var bgColor = "black";
             // containerElement.style.cssText = "position: absolute;top: 0px;left: 0px;";
             containerElement.style.cssText = "position: absolute;top: 0px;left: 0px;width: " + width + "px;height: " + height + "px;" + "background:" + bgColor + ";";
             // containerElement.hidden = true;
@@ -516,14 +529,14 @@ var AFG = {};
             return containerElement;
         },
         _showContainerElement: function(isShow) {
-            this._containerElement.style.display = isShow ? 'block' : 'none';
+            this._containerElement.style.display = isShow ? "block" : "none";
         },
-        _includeJS: function (src, onload, onerror) {
+        _includeJS: function(src, onload, onerror) {
             var script = document.createElement("script");
             script.async = true;
 
             var done = false;
-            script.onload = function (event) {
+            script.onload = function(event) {
                 if (done) {
                     return;
                 }
@@ -532,7 +545,7 @@ var AFG = {};
                     onload(event);
                 }
             };
-            script.onerror = function (event) {
+            script.onerror = function(event) {
                 if (onerror) {
                     onerror(event);
                 }
@@ -551,7 +564,7 @@ var AFG = {};
         AdSenseManager.prototype[p] = proto[p];
     }
 
-    var AdSense = AFG.AdSense = function () {
+    var AdSense = AFG.AdSense = function() {
         EventEmitter3.call(this);
     }
 
@@ -562,7 +575,7 @@ var AFG = {};
         _adOptions: null,
         _adsRenderingSettings: null,
         destroyed: null,
-        _init: function (options) {
+        _init: function(options) {
             this.destroyed = false;
             this.loaded = false;
             this._adsManager = null;
@@ -571,7 +584,7 @@ var AFG = {};
             this._adsRenderingSettings = options.adsRenderingSettings;
             this._adOptions = options.adOptions;
         },
-        show: function () {
+        show: function() {
             if (this.destroyed) return false;
 
             var adsManager = this._adsManager;
@@ -587,7 +600,7 @@ var AFG = {};
         isLoaded: function() {
             return !!this._adsManager;
         },
-        _onAdsManagerLoaded: function (adsManager) {
+        _onAdsManagerLoaded: function(adsManager) {
             this._adsManager = adsManager;
 
             var Me = this;
@@ -610,11 +623,11 @@ var AFG = {};
 
             this.emit(EVENTS.LOADED);
         },
-        _onAdsManagerLoadError: function (error) {
+        _onAdsManagerLoadError: function(error) {
             this.emit(EVENTS.LOAD_ERROR, error);
             this.destroy();
         },
-        destroy: function () {
+        destroy: function() {
             this._manager._destroyAd(this);
             this._manager = null;
 
@@ -636,4 +649,39 @@ var AFG = {};
     for (var p in AdSenseProto) {
         AdSense.prototype[p] = AdSenseProto[p];
     }
-}())
+
+
+    // don't obscure google's 'properties' .
+    AdSenseManager._reserved = [
+        "google", "ima", "adsbygoogle",
+        "AdsLoader", "AdDisplayContainer", "AdsRenderingSettings", "AdsRequest",
+
+        "initialize",
+        "requestAds",
+        "getUserRequestContext",
+        "getAdsManager",
+        "getError",
+        "EventEmitter3",
+        "addEventListener",
+        "on",
+        "name",
+        "bind",
+        "emit",
+        "destroy",
+
+        "ViewMode",
+        "AdErrorEvent",
+        "AdEvent", "AdEventType",
+        "AdsManagerLoadedEvent",
+        "Type",
+
+        "AD_ERROR",
+        "USER_CLOSE",
+        "CLICK",
+        "SKIPPED",
+        "STARTED",
+        "USER_CLOSE",
+        "ADS_MANAGER_LOADED",
+        "NORMAL",
+    ];
+}());
