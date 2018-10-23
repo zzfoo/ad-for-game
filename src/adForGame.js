@@ -4,6 +4,7 @@ var AFG = {};
 
 (function() {
     var google;
+    var EventEmitter3 = window.EventEmitter3;
 
     var EVENTS = AFG.EVENTS = {
         LOADED: "loaded",
