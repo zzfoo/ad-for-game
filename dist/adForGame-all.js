@@ -344,6 +344,7 @@ var AFG = {};
 
 (function() {
     var google;
+    var EventEmitter3 = window.EventEmitter3;
 
     var EVENTS = AFG.EVENTS = {
         LOADED: "loaded",
@@ -421,13 +422,17 @@ var AFG = {};
                 "client": options.id || this.id,
                 "description_url": pageUrl,
                 "videoad_start_delay": options.delay || 0,
-                "max_ad_duration": options.adDuration || (15 * 1000),
-                "sdmax": options.skippableAdDuration || (30 * 1000),
                 "hl": options.language || "en",
             };
 
             if (options.channel) {
                 params["channel"] = options.channel;
+            }
+            if (options.adDuration) {
+                params["max_ad_duration"] = options.adDuration;
+            }
+            if (options.skippableAdDuration) {
+                params["sdmax"] = options.skippableAdDuration;
             }
 
             var query = [];
@@ -435,6 +440,7 @@ var AFG = {};
                 query.push(p + "=" + encodeURIComponent(params[p]));
             }
             var adTagUrl = src + "?" + query.join("&");
+            console.log('adTagUrl: ', adTagUrl);
 
             var width = options.width || this.screenWidth || window.innerWidth;
             var height = options.height || this.screenHeight || window.innerHeight;
@@ -449,7 +455,9 @@ var AFG = {};
             adsRequest["linearAdSlotHeight"] = height;
             adsRequest["nonLinearAdSlotWidth"] = width;
             adsRequest["nonLinearAdSlotHeight"] = height;
-            // adsRequest.vastLoadTimeout = options.vastLoadTimeout || 5000;
+            if (options.vastLoadTimeout || options.vastLoadTimeout === 0) {
+                adsRequest.vastLoadTimeout = options.vastLoadTimeout;
+            }
 
             var adsRenderingSettings = new google.ima.AdsRenderingSettings();
             adsRenderingSettings["restoreCustomPlaybackStateOnAdBreakComplete"] = true;
@@ -477,6 +485,7 @@ var AFG = {};
             var requestContentObject = adsManagerLoadedEvent.getUserRequestContext();
             var name = requestContentObject.name;
             var ad = this._adCache[name];
+            if (!ad) return;
             var adsManager = adsManagerLoadedEvent.getAdsManager({
                 currentTime: 0,
                 duration: 1,
@@ -494,6 +503,7 @@ var AFG = {};
             var requestContentObject = adErrorEvent.getUserRequestContext();
             var name = requestContentObject.name;
             var ad = this._adCache[name];
+            if (!ad) return;
             var error = adErrorEvent.getError();
             ad._onAdsManagerLoadError(error);
         },
@@ -575,6 +585,7 @@ var AFG = {};
         _adOptions: null,
         _adsRenderingSettings: null,
         destroyed: null,
+        _timeoutId: null,
         _init: function(options) {
             this.destroyed = false;
             this.loaded = false;
@@ -583,7 +594,15 @@ var AFG = {};
             this.name = options.name;
             this._adsRenderingSettings = options.adsRenderingSettings;
             this._adOptions = options.adOptions;
-        },
+
+            var timeout = options.adOptions.timeout;
+            if (timeout) {
+                this._timeoutId = setTimeout(function() {
+                    this._timeoutId = null;
+                    this._onLoadTimeout();
+                }.bind(this), timeout);
+            }
+        },  
         show: function() {
             if (this.destroyed) return false;
 
@@ -600,7 +619,12 @@ var AFG = {};
         isLoaded: function() {
             return !!this._adsManager;
         },
+        _onLoadTimeout: function() {
+            this.emit(EVENTS.LOAD_ERROR, 'load timeout!');
+            this.destroy();
+        },
         _onAdsManagerLoaded: function(adsManager) {
+            if (this.destroyed) return;
             this._adsManager = adsManager;
 
             var Me = this;
@@ -620,10 +644,18 @@ var AFG = {};
             adsManager.addEventListener(AdEventType.CLICK, function() {
                 Me.emit(EVENTS.AD_CLICKED);
             });
-
+            if (this._timeoutId) {
+                clearTimeout(this._timeoutId);
+                this._timeoutId = null;
+            }
             this.emit(EVENTS.LOADED);
         },
         _onAdsManagerLoadError: function(error) {
+            if (this.destroyed) return;
+            if (this._timeoutId) {
+                clearTimeout(this._timeoutId);
+                this._timeoutId = null;
+            }
             this.emit(EVENTS.LOAD_ERROR, error);
             this.destroy();
         },

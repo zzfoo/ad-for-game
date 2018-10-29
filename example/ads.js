@@ -11,7 +11,6 @@ function init() {
         // containerElement: document.getElementById('adContainer'),
     }, function() {
         console.log('adSenseManager inited!');
-
         requestNewAd();
     })
 }
@@ -22,16 +21,17 @@ function requestNewAd() {
         id: 'ca-games-pub-9274896770936398',
         descriptionPage: 'http://onemorejoy.com/wx-games/fat-jump/index.html',
         delay: 0,
-        adDuration: 15 * 1000,
-        skippableAdDuration: 30 * 1000,
+        // adDuration: 30 * 1000,
+        // skippableAdDuration: 30 * 1000,
+        timeout: 20 * 1000,
         language: 'en',
         channel: '4301438093',
+        vastLoadTimeout: 10 * 1000, // 广告加载超时时间
         onAdClosed: function() {
             console.log('ad closed!');
         },
         // width: 640,
         // height: 400,
-        // vastLoadTimeout: 5000,
     });
 
     var EVENTS = AFG.EVENTS;
