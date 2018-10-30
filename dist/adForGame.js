@@ -166,13 +166,17 @@ var AFG = {};
             var requestContentObject = adErrorEvent.getUserRequestContext();
             var name = requestContentObject.name;
             var ad = this._adCache[name];
-            if (!ad) return;
+            if (!ad) {
+                return;
+            }
             var error = adErrorEvent.getError();
             ad._onAdsManagerLoadError(error);
         },
         // onAdEvent: function(name, adEvent) {
         //     var ad = this._adCache[name];
-        //     if (!ad) return;
+        //     if (!ad) {
+        //         return;
+        //     }
 
         //     var type = adEvent.type;
         //     var AdEventType = google.ima.AdEvent.Type;
@@ -270,7 +274,9 @@ var AFG = {};
             if (this.destroyed) return false;
 
             var adsManager = this._adsManager;
-            if (!adsManager) return false;
+            if (!adsManager) {
+                return false;
+            }
 
             this._manager._showAd(this);
 
@@ -287,7 +293,9 @@ var AFG = {};
             this.destroy();
         },
         _onAdsManagerLoaded: function(adsManager) {
-            if (this.destroyed) return;
+            if (this.destroyed) {
+                return;
+            }
             this._adsManager = adsManager;
 
             var Me = this;
@@ -314,7 +322,9 @@ var AFG = {};
             this.emit(EVENTS.LOADED);
         },
         _onAdsManagerLoadError: function(error) {
-            if (this.destroyed) return;
+            if (this.destroyed) {
+                return;
+            }
             if (this._timeoutId) {
                 clearTimeout(this._timeoutId);
                 this._timeoutId = null;
