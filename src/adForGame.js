@@ -166,13 +166,17 @@ var AFG = {};
             var requestContentObject = adErrorEvent.getUserRequestContext();
             var name = requestContentObject.name;
             var ad = this._adCache[name];
-            if (!ad) return;
+            if (!ad) {
+                return;
+            }
             var error = adErrorEvent.getError();
             ad._onAdsManagerLoadError(error);
         },
         // onAdEvent: function(name, adEvent) {
         //     var ad = this._adCache[name];
-        //     if (!ad) return;
+        //     if (!ad) {
+        //         return;
+        //     }
 
         //     var type = adEvent.type;
         //     var AdEventType = google.ima.AdEvent.Type;
