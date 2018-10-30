@@ -3,8 +3,10 @@
 var AFG = {};
 
 (function() {
-    var google;
+
     var EventEmitter3 = window.EventEmitter3;
+
+    var google;
 
     var EVENTS = AFG.EVENTS = {
         LOADED: "loaded",
@@ -100,7 +102,6 @@ var AFG = {};
                 query.push(p + "=" + encodeURIComponent(params[p]));
             }
             var adTagUrl = src + "?" + query.join("&");
-            console.log('adTagUrl: ', adTagUrl);
 
             var width = options.width || this.screenWidth || window.innerWidth;
             var height = options.height || this.screenHeight || window.innerHeight;
@@ -145,7 +146,9 @@ var AFG = {};
             var requestContentObject = adsManagerLoadedEvent.getUserRequestContext();
             var name = requestContentObject.name;
             var ad = this._adCache[name];
-            if (!ad) return;
+            if (!ad) {
+                return;
+            }
             var adsManager = adsManagerLoadedEvent.getAdsManager({
                 currentTime: 0,
                 duration: 1,
@@ -262,7 +265,7 @@ var AFG = {};
                     this._onLoadTimeout();
                 }.bind(this), timeout);
             }
-        },  
+        },
         show: function() {
             if (this.destroyed) return false;
 
