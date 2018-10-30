@@ -137,8 +137,7 @@ var AFG = {};
                 adsRenderingSettings: adsRenderingSettings,
             });
             this._adCache[name] = ad;
-            return ad;
-        },
+            return ad;        },
         _generateName: function() {
             return "googleAdForGame_" + (++this._adIndex);
         },
@@ -166,13 +165,17 @@ var AFG = {};
             var requestContentObject = adErrorEvent.getUserRequestContext();
             var name = requestContentObject.name;
             var ad = this._adCache[name];
-            if (!ad) return;
+            if (!ad) {
+                return;
+            }
             var error = adErrorEvent.getError();
             ad._onAdsManagerLoadError(error);
         },
         // onAdEvent: function(name, adEvent) {
         //     var ad = this._adCache[name];
-        //     if (!ad) return;
+        //     if (!ad) {
+        //         return;
+        //     }
 
         //     var type = adEvent.type;
         //     var AdEventType = google.ima.AdEvent.Type;
