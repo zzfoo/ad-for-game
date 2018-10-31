@@ -411,7 +411,7 @@ var AFG = {};
             return adDisplayContainer;
         },
         createAd: function(options) {
-            if (!google) {
+            if (this.disabled || !google) {
                 return false;
             }
 
@@ -611,7 +611,9 @@ var AFG = {};
             }
         },
         show: function() {
-            if (this.destroyed) return false;
+            if (this.disabled || this.destroyed) {
+                return false;
+            }
 
             var adsManager = this._adsManager;
             if (!adsManager) {
