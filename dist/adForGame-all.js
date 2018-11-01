@@ -482,7 +482,7 @@ var AFG = {};
 
         showAd: function(name) {
             var ad = this._adCache[name];
-            if (!ad) {
+            if (this.disabled || !ad) {
                 return false;
             }
 
@@ -597,6 +597,7 @@ var AFG = {};
 
     var AdSenseProto = {
         name: null,
+        disabled: false,
         _manager: null,
         _adsManager: null,
         _adOptions: null,
