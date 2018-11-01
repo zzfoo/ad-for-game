@@ -140,13 +140,41 @@ var AFG = {};
             return ad;
         },
 
+        getAd: function(name) {
+            return this._adCache[name];
+        },
+
         showAd: function(name) {
-            var ad = this._adCache[name];
+            var ad = this.getAd(name);
             if (this.disabled || !ad) {
                 return false;
             }
 
             return ad.show();
+        },
+
+        hideAd: function(name) {
+            var ad = this.getAd(name);
+            if (this.disabled || !ad) {
+                return false;
+            }
+
+            this._displayContainerElement(false);
+
+            return true;
+        },
+
+        removeAd: function(name) {
+            var ad = this.getAd(name);
+            if (!ad) {
+                return false;
+            }
+
+            this._displayContainerElement(false);
+
+            ad.destroy();
+
+            return ad;
         },
 
         _generateName: function() {
@@ -155,7 +183,7 @@ var AFG = {};
         _onAdsManagerLoaded: function(adsManagerLoadedEvent) {
             var requestContentObject = adsManagerLoadedEvent.getUserRequestContext();
             var name = requestContentObject.name;
-            var ad = this._adCache[name];
+            var ad = this.getAd(name);
             if (!ad) {
                 return;
             }
@@ -175,7 +203,7 @@ var AFG = {};
         _onAdsManagerLoadError: function(adErrorEvent) {
             var requestContentObject = adErrorEvent.getUserRequestContext();
             var name = requestContentObject.name;
-            var ad = this._adCache[name];
+            var ad = this.getAd(name);
             if (!ad) {
                 return;
             }
@@ -183,7 +211,7 @@ var AFG = {};
             ad._onAdsManagerLoadError(error);
         },
         // onAdEvent: function(name, adEvent) {
-        //     var ad = this._adCache[name];
+        //     var ad = this.getAd(name);
         //     if (!ad) {
         //         return;
         //     }
