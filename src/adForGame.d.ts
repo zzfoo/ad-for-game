@@ -51,6 +51,9 @@ declare namespace AFG {
         disabled: boolean;
         init(options: InitOptions, callback: ()=>void);
         createAd(options: CreateOptions): AdSense;
+        getAd(name: string): boolean;
         showAd(name: string): boolean;
+        hideAd(name: string): boolean;
+        removeAd(name: string): boolean;
     }
 }
