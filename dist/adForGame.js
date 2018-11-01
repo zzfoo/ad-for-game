@@ -3,8 +3,10 @@
 var AFG = {};
 
 (function() {
-    var google;
+
     var EventEmitter3 = window.EventEmitter3;
+
+    var google;
 
     var EVENTS = AFG.EVENTS = {
         LOADED: "loaded",
@@ -63,17 +65,17 @@ var AFG = {};
                 containerElement = this._createContainerElement();
             }
             this._containerElement = containerElement;
-            this._showContainerElement(false);
+            this._displayContainerElement(false);
             var adDisplayContainer = new google.ima.AdDisplayContainer(containerElement);
             adDisplayContainer.initialize();
             return adDisplayContainer;
         },
         createAd: function(options) {
-            if (!google) {
+            if (this.disabled || !google) {
                 return false;
             }
 
-            var name = this._generateName();
+            var name = options.name || this._generateName();
             var src = "https://googleads.g.doubleclick.net/pagead/ads";
             var pageUrl = options.descriptionPage || window.location.href;
 
@@ -100,7 +102,6 @@ var AFG = {};
                 query.push(p + "=" + encodeURIComponent(params[p]));
             }
             var adTagUrl = src + "?" + query.join("&");
-            console.log('adTagUrl: ', adTagUrl);
 
             var width = options.width || this.screenWidth || window.innerWidth;
             var height = options.height || this.screenHeight || window.innerHeight;
@@ -138,14 +139,54 @@ var AFG = {};
             this._adCache[name] = ad;
             return ad;
         },
+
+        getAd: function(name) {
+            return this._adCache[name];
+        },
+
+        showAd: function(name) {
+            var ad = this.getAd(name);
+            if (this.disabled || !ad) {
+                return false;
+            }
+
+            return ad.show();
+        },
+
+        hideAd: function(name) {
+            var ad = this.getAd(name);
+            if (this.disabled || !ad) {
+                return false;
+            }
+
+            this._displayContainerElement(false);
+
+            return true;
+        },
+
+        removeAd: function(name) {
+            var ad = this.getAd(name);
+            if (!ad) {
+                return false;
+            }
+
+            this._displayContainerElement(false);
+
+            ad.destroy();
+
+            return ad;
+        },
+
         _generateName: function() {
             return "googleAdForGame_" + (++this._adIndex);
         },
         _onAdsManagerLoaded: function(adsManagerLoadedEvent) {
             var requestContentObject = adsManagerLoadedEvent.getUserRequestContext();
             var name = requestContentObject.name;
-            var ad = this._adCache[name];
-            if (!ad) return;
+            var ad = this.getAd(name);
+            if (!ad) {
+                return;
+            }
             var adsManager = adsManagerLoadedEvent.getAdsManager({
                 currentTime: 0,
                 duration: 1,
@@ -162,14 +203,18 @@ var AFG = {};
         _onAdsManagerLoadError: function(adErrorEvent) {
             var requestContentObject = adErrorEvent.getUserRequestContext();
             var name = requestContentObject.name;
-            var ad = this._adCache[name];
-            if (!ad) return;
+            var ad = this.getAd(name);
+            if (!ad) {
+                return;
+            }
             var error = adErrorEvent.getError();
             ad._onAdsManagerLoadError(error);
         },
         // onAdEvent: function(name, adEvent) {
-        //     var ad = this._adCache[name];
-        //     if (!ad) return;
+        //     var ad = this.getAd(name);
+        //     if (!ad) {
+        //         return;
+        //     }
 
         //     var type = adEvent.type;
         //     var AdEventType = google.ima.AdEvent.Type;
@@ -178,11 +223,11 @@ var AFG = {};
             // console.log("on ad closed: ", name);
             // this._containerElement.hidden = true;
             // this._containerElement.style.display = "none";
-            this._showContainerElement(false);
+            this._displayContainerElement(false);
         },
-        _showAd: function(ad) {
+        _displayAd: function(ad) {
             // this._containerElement.hidden = false;
-            this._showContainerElement(true);
+            this._displayContainerElement(true);
         },
         _destroyAd: function(ad) {
             delete this._adCache[ad.name];
@@ -198,7 +243,7 @@ var AFG = {};
             document.body.appendChild(containerElement);
             return containerElement;
         },
-        _showContainerElement: function(isShow) {
+        _displayContainerElement: function(isShow) {
             this._containerElement.style.display = isShow ? "block" : "none";
         },
         _includeJS: function(src, onload, onerror) {
@@ -240,6 +285,7 @@ var AFG = {};
 
     var AdSenseProto = {
         name: null,
+        disabled: false,
         _manager: null,
         _adsManager: null,
         _adOptions: null,
@@ -262,14 +308,18 @@ var AFG = {};
                     this._onLoadTimeout();
                 }.bind(this), timeout);
             }
-        },  
+        },
         show: function() {
-            if (this.destroyed) return false;
+            if (this.disabled || this.destroyed) {
+                return false;
+            }
 
             var adsManager = this._adsManager;
-            if (!adsManager) return false;
+            if (!adsManager) {
+                return false;
+            }
 
-            this._manager._showAd(this);
+            this._manager._displayAd(this);
 
             var options = this._adOptions;
             adsManager.init(options.width, options.height, google.ima.ViewMode.NORMAL);
@@ -284,7 +334,9 @@ var AFG = {};
             this.destroy();
         },
         _onAdsManagerLoaded: function(adsManager) {
-            if (this.destroyed) return;
+            if (this.destroyed) {
+                return;
+            }
             this._adsManager = adsManager;
 
             var Me = this;
@@ -311,7 +363,9 @@ var AFG = {};
             this.emit(EVENTS.LOADED);
         },
         _onAdsManagerLoadError: function(error) {
-            if (this.destroyed) return;
+            if (this.destroyed) {
+                return;
+            }
             if (this._timeoutId) {
                 clearTimeout(this._timeoutId);
                 this._timeoutId = null;
@@ -335,6 +389,7 @@ var AFG = {};
             this.removeAllListeners();
         }
     }
+
     for (var p in EventEmitter3.prototype) {
         AdSense.prototype[p] = EventEmitter3.prototype[p];
     }
