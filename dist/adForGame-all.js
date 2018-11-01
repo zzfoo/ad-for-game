@@ -405,7 +405,7 @@ var AFG = {};
                 containerElement = this._createContainerElement();
             }
             this._containerElement = containerElement;
-            this._showContainerElement(false);
+            this._displayContainerElement(false);
             var adDisplayContainer = new google.ima.AdDisplayContainer(containerElement);
             adDisplayContainer.initialize();
             return adDisplayContainer;
@@ -415,7 +415,7 @@ var AFG = {};
                 return false;
             }
 
-            var name = this._generateName();
+            var name = options.name || this._generateName();
             var src = "https://googleads.g.doubleclick.net/pagead/ads";
             var pageUrl = options.descriptionPage || window.location.href;
 
@@ -479,6 +479,16 @@ var AFG = {};
             this._adCache[name] = ad;
             return ad;
         },
+
+        showAd: function(name) {
+            var ad = this._adCache[name];
+            if (!ad) {
+                return false;
+            }
+
+            return ad.show();
+        },
+
         _generateName: function() {
             return "googleAdForGame_" + (++this._adIndex);
         },
@@ -525,11 +535,11 @@ var AFG = {};
             // console.log("on ad closed: ", name);
             // this._containerElement.hidden = true;
             // this._containerElement.style.display = "none";
-            this._showContainerElement(false);
+            this._displayContainerElement(false);
         },
-        _showAd: function(ad) {
+        _displayAd: function(ad) {
             // this._containerElement.hidden = false;
-            this._showContainerElement(true);
+            this._displayContainerElement(true);
         },
         _destroyAd: function(ad) {
             delete this._adCache[ad.name];
@@ -545,7 +555,7 @@ var AFG = {};
             document.body.appendChild(containerElement);
             return containerElement;
         },
-        _showContainerElement: function(isShow) {
+        _displayContainerElement: function(isShow) {
             this._containerElement.style.display = isShow ? "block" : "none";
         },
         _includeJS: function(src, onload, onerror) {
@@ -620,7 +630,7 @@ var AFG = {};
                 return false;
             }
 
-            this._manager._showAd(this);
+            this._manager._displayAd(this);
 
             var options = this._adOptions;
             adsManager.init(options.width, options.height, google.ima.ViewMode.NORMAL);
@@ -690,6 +700,7 @@ var AFG = {};
             this.removeAllListeners();
         }
     }
+
     for (var p in EventEmitter3.prototype) {
         AdSense.prototype[p] = EventEmitter3.prototype[p];
     }
