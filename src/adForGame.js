@@ -48,7 +48,7 @@ var AFG = {};
             this._adIndex = 0;
         },
         _initAdLoader: function(options) {
-            var adDisplayContainer = this._createAdDisplayContainer(options.containerElement);
+            var adDisplayContainer = this._createAdDisplayContainer(options);
             var adsLoader = this._adsLoader = new google.ima.AdsLoader(adDisplayContainer);
             adsLoader.addEventListener(
                 google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
@@ -60,15 +60,47 @@ var AFG = {};
                 this._onAdsManagerLoadError.bind(this),
                 false);
         },
-        _createAdDisplayContainer: function(containerElement) {
+        _createAdDisplayContainer: function(options) {
+            var containerElement = options.containerElement;
+            var containerStyle = options.containerStyle;
             if (!containerElement) {
                 containerElement = this._createContainerElement();
+            } else if (typeof containerElement === "string") {
+                containerElement = document.getElementById(containerElement);
             }
+
+            for (var p in containerStyle) {
+                containerElement.style[p] = containerStyle[p];
+            }
+
             this._containerElement = containerElement;
             this._displayContainerElement(false);
             var adDisplayContainer = new google.ima.AdDisplayContainer(containerElement);
             adDisplayContainer.initialize();
             return adDisplayContainer;
+        },
+        _createContainerElement: function() {
+            var containerElement = document.createElement("div");
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+            var style = containerElement.style;
+            var defaultStyle = {
+                "position": "absolute",
+                "top": "0px",
+                "left": "0px",
+                "backgroundColor": "black",
+                "width": width + "px",
+                "height": height + "px",
+            };
+            for (var p in defaultStyle) {
+                style[p] = defaultStyle[p];
+            }
+            // containerElement.hidden = true;
+            document.body.appendChild(containerElement);
+            return containerElement;
+        },
+        _displayContainerElement: function(isShow) {
+            this._containerElement.style.display = isShow ? "block" : "none";
         },
         createAd: function(options) {
             if (this.disabled || !google) {
@@ -232,20 +264,6 @@ var AFG = {};
         _destroyAd: function(ad) {
             delete this._adCache[ad.name];
         },
-        _createContainerElement: function() {
-            var containerElement = document.createElement("div");
-            var width = window.innerWidth;
-            var height = window.innerHeight;
-            var bgColor = "black";
-            // containerElement.style.cssText = "position: absolute;top: 0px;left: 0px;";
-            containerElement.style.cssText = "position: absolute;top: 0px;left: 0px;width: " + width + "px;height: " + height + "px;" + "background:" + bgColor + ";";
-            // containerElement.hidden = true;
-            document.body.appendChild(containerElement);
-            return containerElement;
-        },
-        _displayContainerElement: function(isShow) {
-            this._containerElement.style.display = isShow ? "block" : "none";
-        },
         _includeJS: function(src, onload, onerror) {
             var script = document.createElement("script");
             script.async = true;
@@ -330,7 +348,7 @@ var AFG = {};
             return !!this._adsManager;
         },
         _onLoadTimeout: function() {
-            this.emit(EVENTS.LOAD_ERROR, 'load timeout!');
+            this.emit(EVENTS.LOAD_ERROR, "load timeout!");
             this.destroy();
         },
         _onAdsManagerLoaded: function(adsManager) {
@@ -398,7 +416,7 @@ var AFG = {};
     }
 
 
-    // don't obscure google's 'properties' .
+    // don't obscure google's `properties` .
     AdSenseManager._reserved = [
         "google", "ima", "adsbygoogle",
         "AdsLoader", "AdDisplayContainer", "AdsRenderingSettings", "AdsRequest",
