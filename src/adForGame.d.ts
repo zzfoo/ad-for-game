@@ -27,6 +27,8 @@ interface CreateOptions {
     skippableAdDuration: number,
     language: string,
     channel: string,
+    containerElement: HTMLElement | string,
+    containerStyle: object,
     onAdClosed: ()=>void,
 }
 declare namespace AFG {

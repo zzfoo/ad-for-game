@@ -27,9 +27,6 @@ function requestNewAd() {
         language: 'en',
         channel: '4301438093',
         vastLoadTimeout: 10 * 1000, // 广告加载超时时间
-        onAdClosed: function() {
-            console.log('ad closed!');
-        },
         // width: 640,
         // height: 400,
     });
