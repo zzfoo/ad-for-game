@@ -1,7 +1,6 @@
 var adSenseManager = null;
 var currentAdSense = null;
 
-
 function init() {
     // videoContent = document.getElementById('contentElement');
     playButton = document.getElementById('playButton');
