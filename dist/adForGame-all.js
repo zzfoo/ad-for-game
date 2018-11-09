@@ -372,8 +372,15 @@ var AFG = {};
 
         // adsRequest: null,
         init: function(options, callback) {
+            this._adCache = {};
+            this._adIndex = 0;
+
             if (this.disabled) {
-                callback && callback(false);
+                if (callback) {
+                    setTimeout(function() {
+                        callback(false);
+                    }, 30);
+                }
                 return;
             }
 
@@ -387,8 +394,6 @@ var AFG = {};
             });
 
             window.adsbygoogle = window.adsbygoogle || [];
-            this._adCache = {};
-            this._adIndex = 0;
         },
 
         _initAdLoader: function(options) {
@@ -404,7 +409,6 @@ var AFG = {};
                 this._onAdsManagerLoadError.bind(this),
                 false);
         },
-
         _createAdDisplayContainer: function(options) {
             var containerElement = options.containerElement;
             var containerStyle = options.containerStyle;
@@ -712,14 +716,14 @@ var AFG = {};
 
             adsManager.addEventListener(AdEventType.SKIPPED, function() {
                 Me.emit(EVENTS.AD_SKIPPED);
-                if (Me.autoDestroy){
+                if (Me.autoDestroy) {
                     Me.destroy();
                 }
             });
 
             adsManager.addEventListener(AdEventType.USER_CLOSE, function() {
                 Me.emit(EVENTS.AD_END);
-                if (Me.autoDestroy){
+                if (Me.autoDestroy) {
                     Me.destroy();
                 }
             });
@@ -751,8 +755,6 @@ var AFG = {};
             this._manager._destroyAd(this);
             this._manager = null;
 
-            this.destroyed = true;
-
             this._adsManager && this._adsManager.destroy();
             this._adsManager = null;
 
@@ -772,6 +774,7 @@ var AFG = {};
     for (var p in AdSenseProto) {
         AdSense.prototype[p] = AdSenseProto[p];
     }
+
 
     // don't obscure google's `properties` .
     AdSenseManager._reserved = [
