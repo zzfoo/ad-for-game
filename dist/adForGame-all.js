@@ -404,6 +404,7 @@ var AFG = {};
                 this._onAdsManagerLoadError.bind(this),
                 false);
         },
+
         _createAdDisplayContainer: function(options) {
             var containerElement = options.containerElement;
             var containerStyle = options.containerStyle;
@@ -750,6 +751,8 @@ var AFG = {};
             this._manager._destroyAd(this);
             this._manager = null;
 
+            this.destroyed = true;
+
             this._adsManager && this._adsManager.destroy();
             this._adsManager = null;
 
@@ -769,7 +772,6 @@ var AFG = {};
     for (var p in AdSenseProto) {
         AdSense.prototype[p] = AdSenseProto[p];
     }
-
 
     // don't obscure google's `properties` .
     AdSenseManager._reserved = [
