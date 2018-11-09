@@ -28,11 +28,13 @@ var AFG = {};
         _containerElement: null,
 
         disabled: false,
+        inited: false,
 
         // adsRequest: null,
         init: function(options, callback) {
             if (this.disabled) {
-                return false;
+                callback && callback(false);
+                return;
             }
 
             var Me = this;
@@ -40,13 +42,15 @@ var AFG = {};
             this._includeJS(jsSrc, function() {
                 google = window.google;
                 Me._initAdLoader(options);
-                callback && callback();
+                Me.inited = true;
+                callback && callback(true);
             });
 
             window.adsbygoogle = window.adsbygoogle || [];
             this._adCache = {};
             this._adIndex = 0;
         },
+
         _initAdLoader: function(options) {
             var adDisplayContainer = this._createAdDisplayContainer(options);
             var adsLoader = this._adsLoader = new google.ima.AdsLoader(adDisplayContainer);
@@ -319,7 +323,9 @@ var AFG = {};
             this._adsRenderingSettings = options.adsRenderingSettings;
             this._adOptions = options.adOptions;
 
-            var timeout = options.adOptions.timeout;
+            this.autoDestroy = this._adOptions.autoDestroy;
+
+            var timeout = this._adOptions.timeout;
             if (timeout) {
                 this._timeoutId = setTimeout(function() {
                     this._timeoutId = null;
@@ -365,19 +371,27 @@ var AFG = {};
 
             adsManager.addEventListener(AdEventType.SKIPPED, function() {
                 Me.emit(EVENTS.AD_SKIPPED);
+                if (Me.autoDestroy){
+                    Me.destroy();
+                }
             });
 
             adsManager.addEventListener(AdEventType.USER_CLOSE, function() {
                 Me.emit(EVENTS.AD_END);
+                if (Me.autoDestroy){
+                    Me.destroy();
+                }
             });
 
             adsManager.addEventListener(AdEventType.CLICK, function() {
                 Me.emit(EVENTS.AD_CLICKED);
             });
+
             if (this._timeoutId) {
                 clearTimeout(this._timeoutId);
                 this._timeoutId = null;
             }
+
             this.emit(EVENTS.LOADED);
         },
         _onAdsManagerLoadError: function(error) {
@@ -391,11 +405,10 @@ var AFG = {};
             this.emit(EVENTS.LOAD_ERROR, error);
             this.destroy();
         },
+
         destroy: function() {
             this._manager._destroyAd(this);
             this._manager = null;
-
-            this.destroyed = true;
 
             this._adsManager && this._adsManager.destroy();
             this._adsManager = null;
@@ -405,6 +418,8 @@ var AFG = {};
             this.name = null;
 
             this.removeAllListeners();
+
+            this.destroyed = true;
         }
     }
 
