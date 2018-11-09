@@ -97,9 +97,10 @@ var AFG = {};
                 "position": "absolute",
                 "top": "0px",
                 "left": "0px",
-                "backgroundColor": "black",
+                "backgroundColor": "rgba(0,0,0,0.75)",
                 "width": width + "px",
                 "height": height + "px",
+                "z-index": 9E9,
             };
             for (var p in defaultStyle) {
                 style[p] = defaultStyle[p];
