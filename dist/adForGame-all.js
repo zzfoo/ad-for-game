@@ -353,6 +353,7 @@ var AFG = {};
         LOAD_ERROR: "load_error",
         AD_START: "ad_start",
         AD_SKIPPED: "ad_skipped",
+        AD_COMPLETE: "ad_complete",
         AD_END: "ad_end",
         AD_CLICKED: "ad_clicked",
     };
@@ -571,7 +572,7 @@ var AFG = {};
             }
             var adsManager = adsManagerLoadedEvent.getAdsManager({
                 currentTime: 0,
-                duration: 1,
+                duration: 60 * 10,
             }, ad.adsRenderingSettings);
 
             var Me = this;
@@ -711,22 +712,41 @@ var AFG = {};
 
             var Me = this;
             var AdEventType = google.ima.AdEvent.Type;
+
+            this.emit(EVENTS.LOADED);
+
             adsManager.addEventListener(AdEventType.STARTED, function() {
                 Me.emit(EVENTS.AD_START);
             });
 
+            adsManager.addEventListener(AdEventType.COMPLETE, function() {
+                Me.emit(EVENTS.AD_COMPLETE);
+                Me.emit(EVENTS.AD_END);
+                if (Me.autoDestroy) {
+                    Me.destroy();
+                }
+            });
+
+            var skipped = false;
             adsManager.addEventListener(AdEventType.SKIPPED, function() {
+                skipped = true;
                 Me.emit(EVENTS.AD_SKIPPED);
+                Me.emit(EVENTS.AD_END);
                 if (Me.autoDestroy) {
                     Me.destroy();
                 }
             });
 
             adsManager.addEventListener(AdEventType.USER_CLOSE, function() {
-                Me.emit(EVENTS.AD_END);
-                if (Me.autoDestroy) {
-                    Me.destroy();
-                }
+                setTimeout(function() {
+                    if (!skipped) {
+                        Me.emit(EVENTS.AD_COMPLETE);
+                        Me.emit(EVENTS.AD_END);
+                        if (Me.autoDestroy) {
+                            Me.destroy();
+                        }
+                    }
+                }, 100);
             });
 
             adsManager.addEventListener(AdEventType.CLICK, function() {
@@ -737,8 +757,6 @@ var AFG = {};
                 clearTimeout(this._timeoutId);
                 this._timeoutId = null;
             }
-
-            this.emit(EVENTS.LOADED);
         },
         _onAdsManagerLoadError: function(error) {
             if (this.destroyed) {
