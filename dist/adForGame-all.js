@@ -591,7 +591,7 @@ var AFG = {};
                 return;
             }
             var error = adErrorEvent.getError();
-            ad._onAdsManagerLoadError(error);
+            ad._onAdsLoadError(error);
         },
         // onAdEvent: function(name, adEvent) {
         //     var ad = this.getAd(name);
@@ -758,7 +758,7 @@ var AFG = {};
                 this._timeoutId = null;
             }
         },
-        _onAdsManagerLoadError: function(error) {
+        _onAdsLoadError: function(error) {
             if (this.destroyed) {
                 return;
             }
@@ -771,7 +771,11 @@ var AFG = {};
         },
 
         destroy: function() {
-            this._manager._destroyAd(this);
+            if (this.destroyed) {
+                return;
+            }
+
+            this._manager && this._manager._destroyAd(this);
             this._manager = null;
 
             this._adsManager && this._adsManager.destroy();
