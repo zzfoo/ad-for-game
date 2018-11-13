@@ -29,7 +29,6 @@ interface CreateOptions {
     channel: string,
     containerElement: HTMLElement | string,
     containerStyle: object,
-    onAdClosed: ()=>void,
 }
 declare namespace AFG {
     export class AdSense extends EventEmitter{
