@@ -354,7 +354,6 @@ var AFG = window.AFG = window.AFG || {};
         AD_START: "ad_start",
         AD_SKIPPED: "ad_skipped",
         AD_COMPLETE: "ad_complete",
-        AD_END: "ad_end",
         AD_CLICKED: "ad_clicked",
     };
 
@@ -721,7 +720,6 @@ var AFG = window.AFG = window.AFG || {};
 
             adsManager.addEventListener(AdEventType.COMPLETE, function() {
                 Me.emit(EVENTS.AD_COMPLETE);
-                Me.emit(EVENTS.AD_END);
                 if (Me.autoDestroy) {
                     Me.destroy();
                 }
@@ -731,7 +729,6 @@ var AFG = window.AFG = window.AFG || {};
             adsManager.addEventListener(AdEventType.SKIPPED, function() {
                 skipped = true;
                 Me.emit(EVENTS.AD_SKIPPED);
-                Me.emit(EVENTS.AD_END);
                 if (Me.autoDestroy) {
                     Me.destroy();
                 }
@@ -741,7 +738,6 @@ var AFG = window.AFG = window.AFG || {};
                 setTimeout(function() {
                     if (!skipped) {
                         Me.emit(EVENTS.AD_COMPLETE);
-                        Me.emit(EVENTS.AD_END);
                         if (Me.autoDestroy) {
                             Me.destroy();
                         }
