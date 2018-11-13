@@ -236,12 +236,12 @@ var AFG = window.AFG = window.AFG || {};
             }, ad.adsRenderingSettings);
 
             var Me = this;
-            adsManager.addEventListener(google.ima.AdEvent.Type.USER_CLOSE, function(addEvent) {
-                // console.log("USER_CLOSE");
-                Me._onAdClosed(name);
-            });
 
             ad._onAdsManagerLoaded(adsManager);
+
+            ad.once(EVENTS.AD_END, function() {
+                Me._onAdClosed(name);
+            });
         },
         _onAdsManagerLoadError: function(adErrorEvent) {
             var requestContentObject = adErrorEvent.getUserRequestContext();
