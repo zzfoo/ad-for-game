@@ -581,6 +581,10 @@ var AFG = window.AFG = window.AFG || {};
 
             ad.once(EVENTS.AD_END, function() {
                 Me._onAdClosed(name);
+
+                if (ad.autoDestroy) {
+                    ad.destroy();
+                }
             });
         },
         _onAdsManagerLoadError: function(adErrorEvent) {
@@ -722,9 +726,6 @@ var AFG = window.AFG = window.AFG || {};
             adsManager.addEventListener(AdEventType.COMPLETE, function() {
                 Me.emit(EVENTS.AD_COMPLETE);
                 Me.emit(EVENTS.AD_END);
-                if (Me.autoDestroy) {
-                    Me.destroy();
-                }
             });
 
             var skipped = false;
@@ -732,9 +733,6 @@ var AFG = window.AFG = window.AFG || {};
                 skipped = true;
                 Me.emit(EVENTS.AD_SKIPPED);
                 Me.emit(EVENTS.AD_END);
-                if (Me.autoDestroy) {
-                    Me.destroy();
-                }
             });
 
             adsManager.addEventListener(AdEventType.USER_CLOSE, function() {
@@ -742,9 +740,6 @@ var AFG = window.AFG = window.AFG || {};
                     if (!skipped) {
                         Me.emit(EVENTS.AD_COMPLETE);
                         Me.emit(EVENTS.AD_END);
-                        if (Me.autoDestroy) {
-                            Me.destroy();
-                        }
                     }
                 }, 100);
             });
