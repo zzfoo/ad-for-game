@@ -1,6 +1,6 @@
 "use strict";
 
-var AFG = window.AFG = {};
+var AFG = window.AFG = window.AFG || {};
 
 (function() {
 
