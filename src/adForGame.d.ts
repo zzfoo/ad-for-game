@@ -42,14 +42,6 @@ declare namespace AFG {
     }
 
     export class AdSenseManager {
-        static EVENTS: {
-            LOADED: string,
-            LOAD_ERROR: string,
-            AD_START: string,
-            AD_SKIPPED: string,
-            AD_END: string,
-            AD_CLICKED: string,
-        };
         disabled: boolean;
         init(options: InitOptions, callback: ()=>void);
         createAd(options: CreateOptions): AdSense;
@@ -58,4 +50,13 @@ declare namespace AFG {
         hideAd(name: string): boolean;
         removeAd(name: string): boolean;
     }
+
+    export interface EVENTS {
+        LOADED: string,
+        LOAD_ERROR: string,
+        AD_START: string,
+        AD_SKIPPED: string,
+        AD_END: string,
+        AD_CLICKED: string,
+    };
 }
