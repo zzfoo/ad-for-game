@@ -51,7 +51,7 @@ declare namespace AFG {
         removeAd(name: string): boolean;
     }
 
-    export interface EVENTS {
+    export const EVENTS: {
         LOADED: string,
         LOAD_ERROR: string,
         AD_START: string,
