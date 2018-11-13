@@ -56,6 +56,7 @@ declare namespace AFG {
         LOAD_ERROR: string,
         AD_START: string,
         AD_SKIPPED: string,
+        AD_END: string,
         AD_COMPLETE: string,
         AD_CLICKED: string,
     };
