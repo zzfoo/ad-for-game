@@ -446,13 +446,15 @@ var AFG = window.AFG = window.AFG || {};
         }
     }
 
-    for (var p in EventEmitter3.prototype) {
-        AdSense.prototype[p] = EventEmitter3.prototype[p];
+    if (EventEmitter3) {
+        for (var p in EventEmitter3.prototype) {
+            AdSense.prototype[p] = EventEmitter3.prototype[p];
+        }
     }
+
     for (var p in AdSenseProto) {
         AdSense.prototype[p] = AdSenseProto[p];
     }
-
 
     // don't obscure google's `properties` .
     AdSenseManager._reserved = [
