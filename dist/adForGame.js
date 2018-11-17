@@ -126,10 +126,12 @@ var AFG = window.AFG = window.AFG || {};
                 "ad_type": options.adType,
                 "client": options.id || this.id,
                 "description_url": pageUrl,
-                "videoad_start_delay": options.delay || 0,
                 "hl": options.language || "en",
             };
 
+            if (options.delay || options.delay === 0){
+                params["videoad_start_delay"] = options.delay;
+            }
             if (options.channel) {
                 params["channel"] = options.channel;
             }
