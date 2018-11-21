@@ -1,0 +1,34 @@
+{
+  "name": "ad-for-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "dependencies": {
+    "eventemitter3": "^3.1.0",
+    "fbemitter": "^2.1.1",
+    "mitt": "^1.1.3",
+    "rollup": "^0.67.3"
+  },
+  "devDependencies": {
+    "browserify": "^16.2.3",
+    "rollup": "^0.67.3",
+    "rollup-plugin-commonjs": "^9.2.0",
+    "rollup-plugin-node-resolve": "^3.4.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zzfoo/one-adForGame.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zzfoo/one-adForGame/issues"
+  },
+  "homepage": "https://github.com/zzfoo/one-adForGame#readme"
+}

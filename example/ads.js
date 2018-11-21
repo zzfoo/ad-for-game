@@ -16,7 +16,7 @@ function init() {
 
 function requestNewAd() {
     currentAdSense = adSenseManager.createAd({
-        adType: 'image',
+        adType: 'skippablevideo',
         id: 'ca-games-pub-9274896770936398',
         descriptionPage: 'http://onemorejoy.com/wx-games/fat-jump/index.html',
         delay: 0,

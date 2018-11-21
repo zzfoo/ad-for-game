@@ -2,3 +2,5 @@
 ehthumbs.db
 Thumbs.db
 .vscode/
+_backup/
+node_modules/
