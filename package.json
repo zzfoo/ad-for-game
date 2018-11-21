@@ -7,14 +7,10 @@
     "example": "example"
   },
   "dependencies": {
-    "eventemitter3": "^3.1.0",
-    "rollup": "^0.67.3"
+    "eventemitter3": "^3.1.0"
   },
   "devDependencies": {
-    "browserify": "^16.2.3",
-    "rollup": "^0.67.3",
-    "rollup-plugin-commonjs": "^9.2.0",
-    "rollup-plugin-node-resolve": "^3.4.0"
+    "browserify": "^16.2.3"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
