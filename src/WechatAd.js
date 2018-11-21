@@ -11,7 +11,8 @@ var WechatAdManagerProto = {
     adSingleton: null,
     adUnitId: null,
     currentAd: null,
-    doInit: function (options, callback) {
+    doInit: function (callback) {
+        var options = this.options;
         this.adUnitId = options.adUnitId;
         setTimeout(function() {
             callback(null);
@@ -92,7 +93,6 @@ var WechatAdProto = {
     },
     unload: function () {
         this.loaded = false;
-
     },
     show: function () {
         this.manager.displayAd();
