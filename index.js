@@ -1,6 +1,6 @@
-var base = require('./Ad.js');
-var GoogleBase = require('./GoogleAd.js');
-var WechatBase = require('./WechatAd.js');
+var base = require('./src/Ad.js');
+var GoogleBase = require('./src/GoogleAd.js');
+var WechatBase = require('./src/WechatAd.js');
 module.exports = {
     EVENTS: base.EVENTS,
     AdManager: base.AdManager,

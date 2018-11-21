@@ -8,4 +8,4 @@
 # rollup -c rollup-all.config.js
 # uglifyjs -c -m -o ./dist/adForGame.min.js -- ./dist/adForGame.js
 # uglifyjs -c -m -o ./dist/adForGame-all.min.js -- ./dist/adForGame-all.js
-browserify ./src/index.js > ./dist/adForGame.js -s AFG
+browserify ./index.js > ./dist/adForGame.js -s AFG
