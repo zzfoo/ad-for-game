@@ -1,6 +1,6 @@
-// var EventEmitter3 = require('fbemitter').EventEmitter3;
-// var EventEmitter3 = require('eventemitter3');
-var EventEmitter3 = window.EventEmitter3 = require('eventemitter3');
+// var EventEmitter = require('fbemitter').EventEmitter;
+// var EventEmitter = require('eventemitter3');
+var EventEmitter = require('eventemitter3');
 // var async = window.async = require('async');
 var EVENTS = {
     LOADED: "loaded",
@@ -66,7 +66,7 @@ for (var p in proto) {
 }
 
 var Ad = function () {
-    EventEmitter3.call(this);
+    EventEmitter.call(this);
 
     this.destroyed = false;
 }
@@ -131,8 +131,8 @@ var AdProto = {
         return;
     },
 }
-for (var p in EventEmitter3.prototype) {
-    Ad.prototype[p] = EventEmitter3.prototype[p];
+for (var p in EventEmitter.prototype) {
+    Ad.prototype[p] = EventEmitter.prototype[p];
 }
 for (var p in AdProto) {
     Ad.prototype[p] = AdProto[p];

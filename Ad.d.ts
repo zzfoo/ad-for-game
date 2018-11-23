@@ -26,17 +26,18 @@ declare namespace AFG {
         containerStyle,
     }
     export interface GoogleAdOptions {
-        descriptionPage,
-        adType,
-        id,
-        channel,
-        adDuration,
-        skippableAdDuration,
-        delay,
-        language,
-        vastLoadTimeout,
-        width,
-        height,
+        descriptionPage?,
+        adType?,
+        id?,
+        channel?,
+        adDuration?,
+        skippableAdDuration?,
+        delay?,
+        language?,
+        vastLoadTimeout?,
+        width?,
+        height?,
+        timeout?,
     }
     export class GoogleAdManager extends AdManager {
     }
@@ -46,6 +47,7 @@ declare namespace AFG {
         adUnitId
     }
     export interface WechatAdOptions {
+        timeout?,
     }
     export class WechatAdManager extends AdManager {
     }
