@@ -350,9 +350,9 @@ if ('undefined' !== typeof module) {
 }
 
 },{}],3:[function(require,module,exports){
-// var EventEmitter3 = require('fbemitter').EventEmitter3;
-// var EventEmitter3 = require('eventemitter3');
-var EventEmitter3 = window.EventEmitter3 = require('eventemitter3');
+// var EventEmitter = require('fbemitter').EventEmitter;
+// var EventEmitter = require('eventemitter3');
+var EventEmitter = require('eventemitter3');
 // var async = window.async = require('async');
 var EVENTS = {
     LOADED: "loaded",
@@ -365,7 +365,6 @@ var EVENTS = {
 };
 
 var AdManager = function () {
-    this.inited = false;
 };
 var proto = {
     inited: null,
@@ -373,15 +372,21 @@ var proto = {
     _adIndex: null,
     _adCache: null,
     init: function (options, callback) {
+        this.inited = false;
         this._adCache = {};
         this.options = options;
-        this.doInit(callback);
+
+        var Me = this;
+        this.doInit(function(err) {
+            Me.inited = true;
+            callback && callback(err);
+        });
     },
     // user to implement
     doInit: function (callback) {
         if (callback) {
             setTimeout(function () {
-                callback && callback(null);
+                callback(null);
             }, 30);
         }
     },
@@ -418,7 +423,7 @@ for (var p in proto) {
 }
 
 var Ad = function () {
-    EventEmitter3.call(this);
+    EventEmitter.call(this);
 
     this.destroyed = false;
 }
@@ -483,8 +488,8 @@ var AdProto = {
         return;
     },
 }
-for (var p in EventEmitter3.prototype) {
-    Ad.prototype[p] = EventEmitter3.prototype[p];
+for (var p in EventEmitter.prototype) {
+    Ad.prototype[p] = EventEmitter.prototype[p];
 }
 for (var p in AdProto) {
     Ad.prototype[p] = AdProto[p];
@@ -517,7 +522,7 @@ var GoogleAdManagerProto = {
             google = window['google'];
             Me._initAdLoader();
             Me.inited = true;
-            callback && callback(null);
+            callback(null);
         }, function(err) {
             callback(err)
         });
@@ -878,8 +883,8 @@ var WechatAdManagerProto = {
     adSingleton: null,
     adUnitId: null,
     currentAd: null,
-    doInit: function (options, callback) {
-        this.adUnitId = options.adUnitId;
+    doInit: function (callback) {
+        var options = this.options;
         setTimeout(function() {
             callback(null);
         }, 30);
@@ -894,9 +899,10 @@ var WechatAdManagerProto = {
         return ad;
     },
 
-    _initAdSingleton: function () {
+    _initAdSingleton: function (adUnitId) {
         var Me = this;
-        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ adUnitId: this.adUnitId });
+        this.adUnitId = adUnitId;
+        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ adUnitId: adUnitId });
         adSingleton.onLoad(function () {
             Me.currentAd.onLoaded();
         })
@@ -915,7 +921,7 @@ var WechatAdManagerProto = {
     loadAd: function (ad) {
         this.currentAd = ad;
         if (!this.adSingleton) {
-            this._initAdSingleton();
+            this._initAdSingleton(ad.options.adUnitId);
         }
     }
 };
@@ -959,7 +965,6 @@ var WechatAdProto = {
     },
     unload: function () {
         this.loaded = false;
-
     },
     show: function () {
         this.manager.displayAd();

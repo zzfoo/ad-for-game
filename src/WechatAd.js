@@ -13,7 +13,6 @@ var WechatAdManagerProto = {
     currentAd: null,
     doInit: function (callback) {
         var options = this.options;
-        this.adUnitId = options.adUnitId;
         setTimeout(function() {
             callback(null);
         }, 30);
@@ -28,9 +27,10 @@ var WechatAdManagerProto = {
         return ad;
     },
 
-    _initAdSingleton: function () {
+    _initAdSingleton: function (adUnitId) {
         var Me = this;
-        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ adUnitId: this.adUnitId });
+        this.adUnitId = adUnitId;
+        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ adUnitId: adUnitId });
         adSingleton.onLoad(function () {
             Me.currentAd.onLoaded();
         })
@@ -49,7 +49,7 @@ var WechatAdManagerProto = {
     loadAd: function (ad) {
         this.currentAd = ad;
         if (!this.adSingleton) {
-            this._initAdSingleton();
+            this._initAdSingleton(ad.options.adUnitId);
         }
     }
 };

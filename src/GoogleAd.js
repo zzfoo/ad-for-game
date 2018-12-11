@@ -19,7 +19,7 @@ var GoogleAdManagerProto = {
             google = window['google'];
             Me._initAdLoader();
             Me.inited = true;
-            callback && callback(null);
+            callback(null);
         }, function(err) {
             callback(err)
         });

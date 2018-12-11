@@ -13,7 +13,6 @@ var EVENTS = {
 };
 
 var AdManager = function () {
-    this.inited = false;
 };
 var proto = {
     inited: null,
@@ -21,15 +20,21 @@ var proto = {
     _adIndex: null,
     _adCache: null,
     init: function (options, callback) {
+        this.inited = false;
         this._adCache = {};
         this.options = options;
-        this.doInit(callback);
+
+        var Me = this;
+        this.doInit(function(err) {
+            Me.inited = true;
+            callback && callback(err);
+        });
     },
     // user to implement
     doInit: function (callback) {
         if (callback) {
             setTimeout(function () {
-                callback && callback(null);
+                callback(null);
             }, 30);
         }
     },
