@@ -15,7 +15,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "browserify ./index.js > ./dist/adForGame.js -s AFG && uglifyjs -c -m -o ./dist/adForGame.min.js -- ./dist/adForGame.js"
+    "build": "browserify ./index.js > ./dist/adForGame.js -s AFG && uglifyjs -c -m -o ./dist/adForGame.min.js -- ./dist/adForGame.js",
+    "build-window": "browserify ./window-index.js > ./dist/window-adForGame.js && uglifyjs -c -m -o ./dist/window-adForGame.min.js -- ./dist/window-adForGame.js"
   },
   "repository": {
     "type": "git",
