@@ -30,7 +30,7 @@ var WechatAdManagerProto = {
     _initAdSingleton: function (adUnitId) {
         var Me = this;
         this.adUnitId = adUnitId;
-        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ adUnitId: adUnitId });
+        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ "adUnitId": adUnitId });
         adSingleton.onLoad(function () {
             Me.currentAd.onLoaded();
         })
