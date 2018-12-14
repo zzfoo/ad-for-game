@@ -44,9 +44,9 @@ declare namespace AFG {
     export class GoogleAd extends Ad {
     }
     export interface WechatAdManagerOptions {
-        adUnitId
     }
     export interface WechatAdOptions {
+        adUnitId?,
         timeout?,
     }
     export class WechatAdManager extends AdManager {
