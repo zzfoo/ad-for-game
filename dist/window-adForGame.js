@@ -902,7 +902,7 @@ var WechatAdManagerProto = {
     _initAdSingleton: function (adUnitId) {
         var Me = this;
         this.adUnitId = adUnitId;
-        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ adUnitId: adUnitId });
+        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ "adUnitId": adUnitId });
         adSingleton.onLoad(function () {
             Me.currentAd.onLoaded();
         })
@@ -1009,6 +1009,7 @@ module.exports = {
     WechatAdManager: WechatAdManager,
     WechatAd: WechatAd,
 };
+
 },{"./Ad.js":3}],6:[function(require,module,exports){
 var AFG = require('./index');
 window['AFG'] = AFG;
