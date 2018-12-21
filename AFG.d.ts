@@ -8,7 +8,7 @@ declare namespace AFG {
         AD_END: string,
         AD_CLICKED: string,
     }
-    export const STATUS: {
+    export const AD_STATUS: {
         FRESH: string,
         LOADING: string,
         LOADED: string,
