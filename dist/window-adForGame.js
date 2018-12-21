@@ -4,6 +4,7 @@ var GoogleBase = require('./src/GoogleAd.js');
 var WechatBase = require('./src/WechatAd.js');
 module.exports = {
     EVENTS: base.EVENTS,
+    AD_STATUS: base.AD_STATUS,
     AdManager: base.AdManager,
     Ad: base.Ad,
     GoogleAdManager: GoogleBase.GoogleAdManager,
@@ -362,6 +363,15 @@ var EVENTS = {
     AD_COMPLETE: "ad_complete",
     AD_END: "ad_end",
     AD_CLICKED: "ad_clicked",
+    AD_DESTROYED: "ad_destroyed",
+};
+
+var AD_STATUS = {
+    FRESH: 1,
+    LOADING: 2,
+    LOADED: 3,
+    LOAD_FAILED: 4,
+    DESTROYED: 5,
 };
 
 var AdManager = function () {
@@ -371,6 +381,7 @@ var proto = {
     options: null,
     _adIndex: null,
     _adCache: null,
+    _initTimeoutId: null,
     init: function (options, callback) {
         this.inited = false;
         this._adCache = {};
@@ -390,31 +401,31 @@ var proto = {
             }, 30);
         }
     },
-    // user to implement
-    doCreateAd: function () {
-        return new Ad();
-    },
     createAd: function (options, name) {
         var ad = this.doCreateAd();
-        if (!ad) {
-            return false;
-        }
-        name = name || this.generateName();
+        name = name || this._generateName();
         ad.init(name, this, options);
         this._adCache[name] = ad;
         return ad;
     },
+    // user to implement
+    doCreateAd: function () {
+        return new Ad();
+    },
+    destroyAd: function (ad) {
+        delete this._adCache[ad.name];
+        ad.destroy();
+        this.doDestroyAd(ad);
+        return;
+    },
+    // user to implement
+    doDestroyAd: function(name) {
+        return;
+    },
     getAd: function (name) {
         return this._adCache[name];
     },
-    destroyAd: function (name) {
-        delete this._adCache[name];
-        return;
-    },
-    displayAd: function (name) {
-        return;
-    },
-    generateName: function () {
+    _generateName: function () {
         return 'ad_' + (++this._adIndex);
     },
 };
@@ -428,63 +439,61 @@ var Ad = function () {
     this.destroyed = false;
 }
 var AdProto = {
+    status: null,
     name: null,
     manager: null,
     options: null,
-    loaded: null,
-    destroyed: null,
+    _loadTimeoutId: null,
     init: function (name, manager, options) {
-        this.manager = manager;
         this.name = name;
+        this.manager = manager;
         this.options = options;
-        this.onInit();
-        // this.load();
+        this.status = AD_STATUS.FRESH;
+        this.on(EVENTS.LOADED, function() {
+            this.status = AD_STATUS.LOADED;
+        }, this);
+        this.on(EVENTS.LOAD_ERROR, function() {
+            this.status = AD_STATUS.LOAD_FAILED;
+        }, this);
+        this.doInit();
     },
     // user to implement
-    onInit: function () {
+    doInit: function () {
+        return;
     },
-    // user to implement
     load: function () {
-        this.loaded = false;
+        this.status = AD_STATUS.LOADING;
+        this.doLoad()
+        return;
+    },
+    // user to implement
+    doLoad: function() {
         var Me = this;
         setTimeout(function () {
-            Me.loaded = true;
             Me.emit(EVENTS.LOADED);
         }, 30);
-        return;
     },
-    // user to implement
-    unload: function () {
-        return;
-    },
-    // user to implement
-    onDestroy: function () {
-        return;
-    },
-    // user to implement
-    refresh: function () {
-        this.load();
-    },
-    // user to implement
     show: function () {
-        this.emit(EVENTS.AD_START);
-        var Me = this;
+        this.doShow();
+        return;
+    },
+    // user to implement
+    doShow: function() {
         setTimeout(function () {
             Me.emit(EVENTS.AD_COMPLETE);
             Me.emit(EVENTS.AD_END);
         }, 30);
-        return;
     },
     destroy: function () {
-        var manager = this.manager;
+        this.doDestroy();
+        this.removeAllListeners();
         this.name = null;
         this.options = null;
         this.manager = null;
-        this.unload();
-        this.onDestroy();
-        this.removeAllListeners();
-        manager.destroyAd(this);
-        this.destroyed = true;
+        return;
+    },
+    // user to implement
+    doDestroy: function () {
         return;
     },
 }
@@ -499,6 +508,7 @@ module.exports = {
     EVENTS: EVENTS,
     AdManager: AdManager,
     Ad: Ad,
+    AD_STATUS: AD_STATUS,
 };
 },{"eventemitter3":2}],4:[function(require,module,exports){
 var base = require('./Ad.js');
@@ -513,93 +523,28 @@ var GoogleAdManager = function() {
 };
 
 var GoogleAdManagerProto = {
-    _adsLoader: null,
+    adsLoader: null,
     _containerElement: null,
+
     doInit: function(callback) {
         var Me = this;
         window['adsbygoogle'] = window['adsbygoogle'] || [];
         includeJS(imasdkJsSrc, function () {
             google = window['google'];
             Me._initAdLoader();
-            Me.inited = true;
             callback(null);
         }, function(err) {
-            callback(err)
-        });
-    },
-
-    doCreateAd: function() {
-        return new GoogleAd();
-    },
-
-    displayAd: function(name) {
-        this._displayContainerElement(true);
-    },
-
-    loadAd: function(ad) {
-        var options = ad.options;
-        var src = "https://googleads.g.doubleclick.net/pagead/ads";
-        var pageUrl = options.descriptionPage || window.location.href;
-
-        var params = {
-            "ad_type": options.adType,
-            "client": options.id,
-            "description_url": pageUrl,
-            "videoad_start_delay": options.delay || 0,
-            "hl": options.language || "en",
-        };
-
-        if (options.channel) {
-            params["channel"] = options.channel;
-        }
-        if (options.adDuration) {
-            params["max_ad_duration"] = options.adDuration;
-        }
-        if (options.skippableAdDuration) {
-            params["sdmax"] = options.skippableAdDuration;
-        }
-
-        var query = [];
-        for (var p in params) {
-            query.push(p + "=" + encodeURIComponent(params[p]));
-        }
-        var adTagUrl = src + "?" + query.join("&");
-
-        var width = options.width || window.innerWidth;
-        var height = options.height || window.innerHeight;
-        options.width = width;
-        options.height = height;
-        // console.log(adTagUrl, width, height);
-
-        var adsRequest = new google.ima.AdsRequest();
-        adsRequest["adTagUrl"] = adTagUrl;
-        adsRequest["forceNonLinearFullSlot"] = true;
-        adsRequest["linearAdSlotWidth"] = width;
-        adsRequest["linearAdSlotHeight"] = height;
-        adsRequest["nonLinearAdSlotWidth"] = width;
-        adsRequest["nonLinearAdSlotHeight"] = height;
-        if (options.vastLoadTimeout || options.vastLoadTimeout === 0) {
-            adsRequest.vastLoadTimeout = options.vastLoadTimeout;
-        }
-
-        var adsRenderingSettings = new google.ima.AdsRenderingSettings();
-        adsRenderingSettings["restoreCustomPlaybackStateOnAdBreakComplete"] = true;
-        adsRenderingSettings["useStyledNonLinearAds"] = false;
-        adsRenderingSettings["useStyledLinearAds"] = false;
-
-        this._adsLoader.requestAds(adsRequest, {
-            name: ad.name,
+            callback(err);
         });
     },
 
     _initAdLoader: function() {
         var options = this.options;
         var adDisplayContainer = this._createAdDisplayContainer(options);
-        var adsLoader = this._adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+        var adsLoader = this.adsLoader = new google.ima.AdsLoader(adDisplayContainer);
         var Me = this;
         adsLoader.addEventListener(
             google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-            // this._onAdsManagerLoaded.bind(this),
             function (adsManagerLoadedEvent) {
                 var requestContentObject = adsManagerLoadedEvent.getUserRequestContext();
                 var name = requestContentObject.name;
@@ -613,18 +558,11 @@ var GoogleAdManagerProto = {
                 }, ad.adsRenderingSettings);
 
                 ad._onAdsManagerLoaded(adsManager);
-                ad.once(EVENTS.AD_END, function () {
-                    Me._onAdClosed(name);
-                    if (ad.autoDestroy) {
-                        ad.destroy();
-                    }
-                });
             },
             false);
 
         adsLoader.addEventListener(
             google.ima.AdErrorEvent.Type.AD_ERROR,
-            // this._onAdsManagerLoadError.bind(this),
             function (adErrorEvent) {
                 var requestContentObject = adErrorEvent.getUserRequestContext();
                 var name = requestContentObject.name;
@@ -636,6 +574,17 @@ var GoogleAdManagerProto = {
                 ad._onAdsLoadError(error);
             },
             false);
+    },
+
+    doCreateAd: function() {
+        return new GoogleAd();
+    },
+
+    displayContainer: function() {
+        this._displayContainerElement(true);
+    },
+    hideContainer: function() {
+        this._displayContainerElement(false);
     },
 
     _createAdDisplayContainer: function(options) {
@@ -703,47 +652,78 @@ var GoogleAd = function() {
 var GoogleAdProto = {
     _adsManager: null,
     adsRenderingSettings: null,
-    _timeoutId: null,
-    autoDestroy: null,
-    timeout: null,
-    onInit: function() {
-        var options = this.options;
-        this.adsRenderingSettings = options.adsRenderingSettings;
-        this.autoDestroy = options.autoDestroy;
-        this.destroyed = false;
+    doInit: function() {
+        this.on(EVENTS.AD_END, function () {
+            Me.manager.hideContainer();
+            // if (Me.autoDestroy) {
+            //     Me.destroy();
+            // }
+        });
     },
-    refresh: function() {
-        this.clearTimeout();
-        this.load();
-    },
-    clearTimeout: function() {
-        if (this._timeoutId) {
-            clearTimeout(this._timeoutId);
-            this._timeoutId = null;
-        }
-    },
-    load: function() {
-        var options = this.options;
-
-        this.loaded = false;
+    doDestroy: function() {
+        this._adsManager && this._adsManager.destroy();
         this._adsManager = null;
-
-        this.manager.loadAd(this);
-        var timeout = options.timeout;
-        if (timeout) {
-            this._timeoutId = setTimeout(function () {
-                this._timeoutId = null;
-                this._onLoadTimeout();
-            }.bind(this), timeout);
-        }
+        this.adsRenderingSettings = null;
     },
-    show: function() {
-        var adsManager = this._adsManager;
-        if (!adsManager) {
-            return false;
+    doLoad: function() {
+        var options = this.options;
+        this._adsManager = null;
+        var src = "https://googleads.g.doubleclick.net/pagead/ads";
+        var pageUrl = options.descriptionPage || window.location.href;
+
+        var params = {
+            "ad_type": options.adType,
+            "client": options.id,
+            "description_url": pageUrl,
+            "videoad_start_delay": options.delay || 0,
+            "hl": options.language || "en",
+        };
+
+        if (options.channel) {
+            params["channel"] = options.channel;
+        }
+        if (options.adDuration) {
+            params["max_ad_duration"] = options.adDuration;
+        }
+        if (options.skippableAdDuration) {
+            params["sdmax"] = options.skippableAdDuration;
         }
 
-        this.manager.displayAd(this);
+        var query = [];
+        for (var p in params) {
+            query.push(p + "=" + encodeURIComponent(params[p]));
+        }
+        var adTagUrl = src + "?" + query.join("&");
+
+        var width = options.width || window.innerWidth;
+        var height = options.height || window.innerHeight;
+        options.width = width;
+        options.height = height;
+        // console.log(adTagUrl, width, height);
+
+        var adsRequest = new google.ima.AdsRequest();
+        adsRequest["adTagUrl"] = adTagUrl;
+        adsRequest["forceNonLinearFullSlot"] = true;
+        adsRequest["linearAdSlotWidth"] = width;
+        adsRequest["linearAdSlotHeight"] = height;
+        adsRequest["nonLinearAdSlotWidth"] = width;
+        adsRequest["nonLinearAdSlotHeight"] = height;
+        if (options.vastLoadTimeout || options.vastLoadTimeout === 0) {
+            adsRequest.vastLoadTimeout = options.vastLoadTimeout;
+        }
+
+        var adsRenderingSettings = new google.ima.AdsRenderingSettings();
+        adsRenderingSettings["restoreCustomPlaybackStateOnAdBreakComplete"] = true;
+        adsRenderingSettings["useStyledNonLinearAds"] = false;
+        adsRenderingSettings["useStyledLinearAds"] = false;
+        this.adsRenderingSettings = adsRenderingSettings;
+
+        this.manager.adsLoader.requestAds(adsRequest, {
+            name: ad.name,
+        });
+    },
+    doShow: function() {
+        this.manager.displayContainer();
 
         var options = this.options;
         adsManager.init(options.width, options.height, google.ima.ViewMode.NORMAL);
@@ -751,10 +731,6 @@ var GoogleAdProto = {
         return true;
     },
 
-    _onLoadTimeout: function() {
-        this.emit(EVENTS.LOAD_ERROR, "load timeout!");
-        this.destroy();
-    },
     _onAdsManagerLoaded: function(adsManager) {
         if (this.destroyed) {
             return;
@@ -796,21 +772,9 @@ var GoogleAdProto = {
             Me.emit(EVENTS.AD_CLICKED);
         });
 
-        this.clearTimeout();
     },
     _onAdsLoadError: function(error) {
-        if (this.destroyed) {
-            return;
-        }
-        this.clearTimeout();
         this.emit(EVENTS.LOAD_ERROR, error);
-        this.destroy();
-    },
-
-    unload: function() {
-        this._adsManager && this._adsManager.destroy();
-        this._adsManager = null;
-        this.adsRenderingSettings = null;
     },
 }
 for (var p in Ad.prototype) {
@@ -880,50 +844,15 @@ var WechatAdManager = function () {
 }
 
 var WechatAdManagerProto = {
-    adSingleton: null,
-    adUnitId: null,
-    currentAd: null,
     doInit: function (callback) {
-        var options = this.options;
         setTimeout(function() {
             callback(null);
         }, 30);
     },
 
-    displayAd: function (name) {
-        this.adSingleton.show();
-    },
-
     doCreateAd: function () {
-        var ad = new WechatAd();
-        return ad;
+        return new WechatAd();
     },
-
-    _initAdSingleton: function (adUnitId) {
-        var Me = this;
-        this.adUnitId = adUnitId;
-        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ "adUnitId": adUnitId });
-        adSingleton.onLoad(function () {
-            Me.currentAd.onLoaded();
-        })
-        adSingleton.onError(function (err) {
-            Me.currentAd.onLoadError(err);
-        })
-        adSingleton.onClose(function (res) {
-            if (res && res.isEnded || res === undefined) {
-                Me.currentAd.onComplete();
-            } else {
-                Me.currentAd.onSkipped();
-            }
-        })
-    },
-
-    loadAd: function (ad) {
-        this.currentAd = ad;
-        if (!this.adSingleton) {
-            this._initAdSingleton(ad.options.adUnitId);
-        }
-    }
 };
 
 for (var p in AdManager.prototype) {
@@ -938,24 +867,26 @@ var WechatAd = function () {
 }
 
 var WechatAdProto = {
-    _timeoutId: null,
-    timeout: null,
-    refresh: function () {
-        this.clearTimeout();
-        this.load();
-    },
-    load: function () {
+    adSingleton: null,
+    doLoad: function () {
+        var Me = this;
         var options = this.options;
-        this.loaded = false;
-        this.manager.loadAd(this);
-
-        var timeout = options.timeout;
-        if (timeout) {
-            this._timeoutId = setTimeout(function () {
-                this._timeoutId = null;
-                this.onLoadTimeout();
-            }.bind(this), timeout);
-        }
+        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ "adUnitId": options.adUnitId });
+        adSingleton.onLoad(function () {
+            Me.emit(EVENTS.LOADED);
+        })
+        adSingleton.onError(function (err) {
+            Me.emit(EVENTS.LOAD_ERROR, err.errMsg);
+        })
+        adSingleton.onClose(function (res) {
+            if (res && res.isEnded || res === undefined) {
+                this.emit(EVENTS.AD_COMPLETE);
+                this.emit(EVENTS.AD_END);
+            } else {
+                this.emit(EVENTS.AD_SKIPPED);
+                this.emit(EVENTS.AD_END);
+            }
+        })
     },
     clearTimeout: function () {
         if (this._timeoutId) {
@@ -963,37 +894,8 @@ var WechatAdProto = {
             this._timeoutId = null;
         }
     },
-    unload: function () {
-        this.loaded = false;
-    },
-    show: function () {
-        this.manager.displayAd();
-        return true;
-    },
-
-    onLoaded: function () {
-        this.loaded = true;
-        this.clearTimeout();
-        this.emit(EVENTS.LOADED);
-    },
-
-    onLoadError: function (err) {
-        this.clearTimeout();
-        this.emit(EVENTS.LOAD_ERROR, err.errMsg);
-    },
-
-    onSkipped: function () {
-        this.emit(EVENTS.AD_SKIPPED);
-        this.emit(EVENTS.AD_END);
-    },
-
-    onComplete: function () {
-        this.emit(EVENTS.AD_COMPLETE);
-        this.emit(EVENTS.AD_END);
-    },
-
-    onLoadTimeout: function () {
-        this.emit(EVENTS.LOAD_ERROR, "load timeout!");
+    doShow: function () {
+        this.adSingleton.show();
     },
 };
 
