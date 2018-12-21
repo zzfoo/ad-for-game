@@ -14,11 +14,11 @@ var EVENTS = {
 };
 
 var AD_STATUS = {
-    FRESH: 1,
-    LOADING: 2,
-    LOADED: 3,
-    LOAD_FAILED: 4,
-    DESTROYED: 5,
+    FRESH: "FRESH",
+    LOADING: "LOADING",
+    LOADED: "LOADED",
+    LOAD_FAILED: "LOAD_FAILED",
+    DESTROYED: "DESTROYED",
 };
 
 var AdManager = function () {

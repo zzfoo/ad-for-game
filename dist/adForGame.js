@@ -367,11 +367,11 @@ var EVENTS = {
 };
 
 var AD_STATUS = {
-    FRESH: 1,
-    LOADING: 2,
-    LOADED: 3,
-    LOAD_FAILED: 4,
-    DESTROYED: 5,
+    FRESH: "FRESH",
+    LOADING: "LOADING",
+    LOADED: "LOADED",
+    LOAD_FAILED: "LOAD_FAILED",
+    DESTROYED: "DESTROYED",
 };
 
 var AdManager = function () {
@@ -653,11 +653,9 @@ var GoogleAdProto = {
     _adsManager: null,
     adsRenderingSettings: null,
     doInit: function() {
+        var Me = this;
         this.on(EVENTS.AD_END, function () {
             Me.manager.hideContainer();
-            // if (Me.autoDestroy) {
-            //     Me.destroy();
-            // }
         });
     },
     doDestroy: function() {
@@ -719,22 +717,20 @@ var GoogleAdProto = {
         this.adsRenderingSettings = adsRenderingSettings;
 
         this.manager.adsLoader.requestAds(adsRequest, {
-            name: ad.name,
+            name: this.name,
         });
     },
     doShow: function() {
         this.manager.displayContainer();
 
         var options = this.options;
+        var adsManager = this._adsManager;
         adsManager.init(options.width, options.height, google.ima.ViewMode.NORMAL);
         adsManager.start();
         return true;
     },
 
     _onAdsManagerLoaded: function(adsManager) {
-        if (this.destroyed) {
-            return;
-        }
         this.loaded = true;
         this._adsManager = adsManager;
 

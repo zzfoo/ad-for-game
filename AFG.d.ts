@@ -8,18 +8,24 @@ declare namespace AFG {
         AD_END: string,
         AD_CLICKED: string,
     }
+    export const STATUS: {
+        FRESH: string,
+        LOADING: string,
+        LOADED: string,
+        LOAD_FAILED: string,
+        DESTROYED: string,
+    }
     export class AdManager {
         inited: boolean;
         init(options, callback?);
         createAd(options, name?);
+        destroyAd(ad);
     }
     export class Ad extends EventEmitter {
         name: string;
-        loaded: boolean;
-        destroyed: boolean;
+        status: string;
         load();
         show();
-        refresh();
     }
     export interface GoogleAdManagerOptions {
         containerElement,
@@ -37,7 +43,6 @@ declare namespace AFG {
         vastLoadTimeout?,
         width?,
         height?,
-        timeout?,
     }
     export class GoogleAdManager extends AdManager {
     }
@@ -47,7 +52,6 @@ declare namespace AFG {
     }
     export interface WechatAdOptions {
         adUnitId?,
-        timeout?,
     }
     export class WechatAdManager extends AdManager {
     }

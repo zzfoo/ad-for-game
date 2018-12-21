@@ -16,7 +16,7 @@ function init() {
 
 function requestNewAd() {
     currentAd = adManager.createAd({
-        adType: 'skippablevideo',
+        adType: 'image',
         id: 'ca-games-pub-9274896770936398',
         descriptionPage: 'http://onemorejoy.com/wx-games/fat-jump/index.html',
         delay: 0,
@@ -30,6 +30,8 @@ function requestNewAd() {
         // height: 400,
     });
 
+    currentAd.load();
+
     var EVENTS = AFG.EVENTS;
     currentAd.once(EVENTS.LOADED, function() {
         console.log(currentAd.name + ' loaded!');
@@ -40,31 +42,23 @@ function requestNewAd() {
 }
 
 function playAd() {
-    var googleAdForGame = currentAd;
-    var showSucceed = googleAdForGame.show();
     var EVENTS = AFG.EVENTS;
-
-    if (showSucceed) {
-        googleAdForGame.once(EVENTS.AD_START, function() {
-            console.log('AD_START: ' + googleAdForGame.name);
+    if (currentAd.status === AFG.AD_STATUS.LOADED) {
+        currentAd.show();
+        currentAd.once(EVENTS.AD_START, function() {
+            console.log('AD_START: ' + currentAd.name);
         })
-        googleAdForGame.once(EVENTS.AD_SKIPPED, function() {
-            console.log('AD_SKIPPED: ' + googleAdForGame.name);
+        currentAd.once(EVENTS.AD_SKIPPED, function() {
+            console.log('AD_SKIPPED: ' + currentAd.name);
         })
-        googleAdForGame.once(EVENTS.AD_END, function() {
-            console.log('AD_END: ' + googleAdForGame.name);
-            onAdClosed(googleAdForGame.name);
+        currentAd.once(EVENTS.AD_END, function() {
+            console.log('AD_END: ' + currentAd.name);
+            currentAd.load();
         })
-        googleAdForGame.once(EVENTS.AD_CLICKED, function() {
-            console.log('AD_CLICKED: ' + googleAdForGame.name);
+        currentAd.once(EVENTS.AD_CLICKED, function() {
+            console.log('AD_CLICKED: ' + currentAd.name);
         })
-
-        requestNewAd();
     }
-}
-
-function onAdClosed(name) {
-    console.log('ad closed: ', name);
 }
 
 init();

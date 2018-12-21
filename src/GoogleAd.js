@@ -140,11 +140,9 @@ var GoogleAdProto = {
     _adsManager: null,
     adsRenderingSettings: null,
     doInit: function() {
+        var Me = this;
         this.on(EVENTS.AD_END, function () {
             Me.manager.hideContainer();
-            // if (Me.autoDestroy) {
-            //     Me.destroy();
-            // }
         });
     },
     doDestroy: function() {
@@ -206,22 +204,20 @@ var GoogleAdProto = {
         this.adsRenderingSettings = adsRenderingSettings;
 
         this.manager.adsLoader.requestAds(adsRequest, {
-            name: ad.name,
+            name: this.name,
         });
     },
     doShow: function() {
         this.manager.displayContainer();
 
         var options = this.options;
+        var adsManager = this._adsManager;
         adsManager.init(options.width, options.height, google.ima.ViewMode.NORMAL);
         adsManager.start();
         return true;
     },
 
     _onAdsManagerLoaded: function(adsManager) {
-        if (this.destroyed) {
-            return;
-        }
         this.loaded = true;
         this._adsManager = adsManager;
 
