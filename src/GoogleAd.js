@@ -10,93 +10,28 @@ var GoogleAdManager = function() {
 };
 
 var GoogleAdManagerProto = {
-    _adsLoader: null,
+    adsLoader: null,
     _containerElement: null,
+
     doInit: function(callback) {
         var Me = this;
         window['adsbygoogle'] = window['adsbygoogle'] || [];
         includeJS(imasdkJsSrc, function () {
             google = window['google'];
             Me._initAdLoader();
-            Me.inited = true;
             callback(null);
         }, function(err) {
-            callback(err)
-        });
-    },
-
-    doCreateAd: function() {
-        return new GoogleAd();
-    },
-
-    displayAd: function(name) {
-        this._displayContainerElement(true);
-    },
-
-    loadAd: function(ad) {
-        var options = ad.options;
-        var src = "https://googleads.g.doubleclick.net/pagead/ads";
-        var pageUrl = options.descriptionPage || window.location.href;
-
-        var params = {
-            "ad_type": options.adType,
-            "client": options.id,
-            "description_url": pageUrl,
-            "videoad_start_delay": options.delay || 0,
-            "hl": options.language || "en",
-        };
-
-        if (options.channel) {
-            params["channel"] = options.channel;
-        }
-        if (options.adDuration) {
-            params["max_ad_duration"] = options.adDuration;
-        }
-        if (options.skippableAdDuration) {
-            params["sdmax"] = options.skippableAdDuration;
-        }
-
-        var query = [];
-        for (var p in params) {
-            query.push(p + "=" + encodeURIComponent(params[p]));
-        }
-        var adTagUrl = src + "?" + query.join("&");
-
-        var width = options.width || window.innerWidth;
-        var height = options.height || window.innerHeight;
-        options.width = width;
-        options.height = height;
-        // console.log(adTagUrl, width, height);
-
-        var adsRequest = new google.ima.AdsRequest();
-        adsRequest["adTagUrl"] = adTagUrl;
-        adsRequest["forceNonLinearFullSlot"] = true;
-        adsRequest["linearAdSlotWidth"] = width;
-        adsRequest["linearAdSlotHeight"] = height;
-        adsRequest["nonLinearAdSlotWidth"] = width;
-        adsRequest["nonLinearAdSlotHeight"] = height;
-        if (options.vastLoadTimeout || options.vastLoadTimeout === 0) {
-            adsRequest.vastLoadTimeout = options.vastLoadTimeout;
-        }
-
-        var adsRenderingSettings = new google.ima.AdsRenderingSettings();
-        adsRenderingSettings["restoreCustomPlaybackStateOnAdBreakComplete"] = true;
-        adsRenderingSettings["useStyledNonLinearAds"] = false;
-        adsRenderingSettings["useStyledLinearAds"] = false;
-
-        this._adsLoader.requestAds(adsRequest, {
-            name: ad.name,
+            callback(err);
         });
     },
 
     _initAdLoader: function() {
         var options = this.options;
         var adDisplayContainer = this._createAdDisplayContainer(options);
-        var adsLoader = this._adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+        var adsLoader = this.adsLoader = new google.ima.AdsLoader(adDisplayContainer);
         var Me = this;
         adsLoader.addEventListener(
             google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-            // this._onAdsManagerLoaded.bind(this),
             function (adsManagerLoadedEvent) {
                 var requestContentObject = adsManagerLoadedEvent.getUserRequestContext();
                 var name = requestContentObject.name;
@@ -110,18 +45,11 @@ var GoogleAdManagerProto = {
                 }, ad.adsRenderingSettings);
 
                 ad._onAdsManagerLoaded(adsManager);
-                ad.once(EVENTS.AD_END, function () {
-                    Me._onAdClosed(name);
-                    if (ad.autoDestroy) {
-                        ad.destroy();
-                    }
-                });
             },
             false);
 
         adsLoader.addEventListener(
             google.ima.AdErrorEvent.Type.AD_ERROR,
-            // this._onAdsManagerLoadError.bind(this),
             function (adErrorEvent) {
                 var requestContentObject = adErrorEvent.getUserRequestContext();
                 var name = requestContentObject.name;
@@ -133,6 +61,17 @@ var GoogleAdManagerProto = {
                 ad._onAdsLoadError(error);
             },
             false);
+    },
+
+    doCreateAd: function() {
+        return new GoogleAd();
+    },
+
+    displayContainer: function() {
+        this._displayContainerElement(true);
+    },
+    hideContainer: function() {
+        this._displayContainerElement(false);
     },
 
     _createAdDisplayContainer: function(options) {
@@ -200,47 +139,78 @@ var GoogleAd = function() {
 var GoogleAdProto = {
     _adsManager: null,
     adsRenderingSettings: null,
-    _timeoutId: null,
-    autoDestroy: null,
-    timeout: null,
-    onInit: function() {
-        var options = this.options;
-        this.adsRenderingSettings = options.adsRenderingSettings;
-        this.autoDestroy = options.autoDestroy;
-        this.destroyed = false;
+    doInit: function() {
+        this.on(EVENTS.AD_END, function () {
+            Me.manager.hideContainer();
+            // if (Me.autoDestroy) {
+            //     Me.destroy();
+            // }
+        });
     },
-    refresh: function() {
-        this.clearTimeout();
-        this.load();
-    },
-    clearTimeout: function() {
-        if (this._timeoutId) {
-            clearTimeout(this._timeoutId);
-            this._timeoutId = null;
-        }
-    },
-    load: function() {
-        var options = this.options;
-
-        this.loaded = false;
+    doDestroy: function() {
+        this._adsManager && this._adsManager.destroy();
         this._adsManager = null;
-
-        this.manager.loadAd(this);
-        var timeout = options.timeout;
-        if (timeout) {
-            this._timeoutId = setTimeout(function () {
-                this._timeoutId = null;
-                this._onLoadTimeout();
-            }.bind(this), timeout);
-        }
+        this.adsRenderingSettings = null;
     },
-    show: function() {
-        var adsManager = this._adsManager;
-        if (!adsManager) {
-            return false;
+    doLoad: function() {
+        var options = this.options;
+        this._adsManager = null;
+        var src = "https://googleads.g.doubleclick.net/pagead/ads";
+        var pageUrl = options.descriptionPage || window.location.href;
+
+        var params = {
+            "ad_type": options.adType,
+            "client": options.id,
+            "description_url": pageUrl,
+            "videoad_start_delay": options.delay || 0,
+            "hl": options.language || "en",
+        };
+
+        if (options.channel) {
+            params["channel"] = options.channel;
+        }
+        if (options.adDuration) {
+            params["max_ad_duration"] = options.adDuration;
+        }
+        if (options.skippableAdDuration) {
+            params["sdmax"] = options.skippableAdDuration;
         }
 
-        this.manager.displayAd(this);
+        var query = [];
+        for (var p in params) {
+            query.push(p + "=" + encodeURIComponent(params[p]));
+        }
+        var adTagUrl = src + "?" + query.join("&");
+
+        var width = options.width || window.innerWidth;
+        var height = options.height || window.innerHeight;
+        options.width = width;
+        options.height = height;
+        // console.log(adTagUrl, width, height);
+
+        var adsRequest = new google.ima.AdsRequest();
+        adsRequest["adTagUrl"] = adTagUrl;
+        adsRequest["forceNonLinearFullSlot"] = true;
+        adsRequest["linearAdSlotWidth"] = width;
+        adsRequest["linearAdSlotHeight"] = height;
+        adsRequest["nonLinearAdSlotWidth"] = width;
+        adsRequest["nonLinearAdSlotHeight"] = height;
+        if (options.vastLoadTimeout || options.vastLoadTimeout === 0) {
+            adsRequest.vastLoadTimeout = options.vastLoadTimeout;
+        }
+
+        var adsRenderingSettings = new google.ima.AdsRenderingSettings();
+        adsRenderingSettings["restoreCustomPlaybackStateOnAdBreakComplete"] = true;
+        adsRenderingSettings["useStyledNonLinearAds"] = false;
+        adsRenderingSettings["useStyledLinearAds"] = false;
+        this.adsRenderingSettings = adsRenderingSettings;
+
+        this.manager.adsLoader.requestAds(adsRequest, {
+            name: ad.name,
+        });
+    },
+    doShow: function() {
+        this.manager.displayContainer();
 
         var options = this.options;
         adsManager.init(options.width, options.height, google.ima.ViewMode.NORMAL);
@@ -248,10 +218,6 @@ var GoogleAdProto = {
         return true;
     },
 
-    _onLoadTimeout: function() {
-        this.emit(EVENTS.LOAD_ERROR, "load timeout!");
-        this.destroy();
-    },
     _onAdsManagerLoaded: function(adsManager) {
         if (this.destroyed) {
             return;
@@ -293,21 +259,9 @@ var GoogleAdProto = {
             Me.emit(EVENTS.AD_CLICKED);
         });
 
-        this.clearTimeout();
     },
     _onAdsLoadError: function(error) {
-        if (this.destroyed) {
-            return;
-        }
-        this.clearTimeout();
         this.emit(EVENTS.LOAD_ERROR, error);
-        this.destroy();
-    },
-
-    unload: function() {
-        this._adsManager && this._adsManager.destroy();
-        this._adsManager = null;
-        this.adsRenderingSettings = null;
     },
 }
 for (var p in Ad.prototype) {

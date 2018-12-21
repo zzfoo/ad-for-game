@@ -10,6 +10,15 @@ var EVENTS = {
     AD_COMPLETE: "ad_complete",
     AD_END: "ad_end",
     AD_CLICKED: "ad_clicked",
+    AD_DESTROYED: "ad_destroyed",
+};
+
+var AD_STATUS = {
+    FRESH: 1,
+    LOADING: 2,
+    LOADED: 3,
+    LOAD_FAILED: 4,
+    DESTROYED: 5,
 };
 
 var AdManager = function () {
@@ -19,6 +28,7 @@ var proto = {
     options: null,
     _adIndex: null,
     _adCache: null,
+    _initTimeoutId: null,
     init: function (options, callback) {
         this.inited = false;
         this._adCache = {};
@@ -38,31 +48,31 @@ var proto = {
             }, 30);
         }
     },
-    // user to implement
-    doCreateAd: function () {
-        return new Ad();
-    },
     createAd: function (options, name) {
         var ad = this.doCreateAd();
-        if (!ad) {
-            return false;
-        }
-        name = name || this.generateName();
+        name = name || this._generateName();
         ad.init(name, this, options);
         this._adCache[name] = ad;
         return ad;
     },
+    // user to implement
+    doCreateAd: function () {
+        return new Ad();
+    },
+    destroyAd: function (ad) {
+        delete this._adCache[ad.name];
+        ad.destroy();
+        this.doDestroyAd(ad);
+        return;
+    },
+    // user to implement
+    doDestroyAd: function(name) {
+        return;
+    },
     getAd: function (name) {
         return this._adCache[name];
     },
-    destroyAd: function (name) {
-        delete this._adCache[name];
-        return;
-    },
-    displayAd: function (name) {
-        return;
-    },
-    generateName: function () {
+    _generateName: function () {
         return 'ad_' + (++this._adIndex);
     },
 };
@@ -76,63 +86,61 @@ var Ad = function () {
     this.destroyed = false;
 }
 var AdProto = {
+    status: null,
     name: null,
     manager: null,
     options: null,
-    loaded: null,
-    destroyed: null,
+    _loadTimeoutId: null,
     init: function (name, manager, options) {
-        this.manager = manager;
         this.name = name;
+        this.manager = manager;
         this.options = options;
-        this.onInit();
-        // this.load();
+        this.status = AD_STATUS.FRESH;
+        this.on(EVENTS.LOADED, function() {
+            this.status = AD_STATUS.LOADED;
+        }, this);
+        this.on(EVENTS.LOAD_ERROR, function() {
+            this.status = AD_STATUS.LOAD_FAILED;
+        }, this);
+        this.doInit();
     },
     // user to implement
-    onInit: function () {
+    doInit: function () {
+        return;
     },
-    // user to implement
     load: function () {
-        this.loaded = false;
+        this.status = AD_STATUS.LOADING;
+        this.doLoad()
+        return;
+    },
+    // user to implement
+    doLoad: function() {
         var Me = this;
         setTimeout(function () {
-            Me.loaded = true;
             Me.emit(EVENTS.LOADED);
         }, 30);
-        return;
     },
-    // user to implement
-    unload: function () {
-        return;
-    },
-    // user to implement
-    onDestroy: function () {
-        return;
-    },
-    // user to implement
-    refresh: function () {
-        this.load();
-    },
-    // user to implement
     show: function () {
-        this.emit(EVENTS.AD_START);
-        var Me = this;
+        this.doShow();
+        return;
+    },
+    // user to implement
+    doShow: function() {
         setTimeout(function () {
             Me.emit(EVENTS.AD_COMPLETE);
             Me.emit(EVENTS.AD_END);
         }, 30);
-        return;
     },
     destroy: function () {
-        var manager = this.manager;
+        this.doDestroy();
+        this.removeAllListeners();
         this.name = null;
         this.options = null;
         this.manager = null;
-        this.unload();
-        this.onDestroy();
-        this.removeAllListeners();
-        manager.destroyAd(this);
-        this.destroyed = true;
+        return;
+    },
+    // user to implement
+    doDestroy: function () {
         return;
     },
 }
@@ -147,4 +155,5 @@ module.exports = {
     EVENTS: EVENTS,
     AdManager: AdManager,
     Ad: Ad,
+    AD_STATUS: AD_STATUS,
 };
