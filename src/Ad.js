@@ -131,6 +131,7 @@ var AdProto = {
     },
     // user to implement
     doShow: function() {
+        var Me = this;
         setTimeout(function () {
             Me.showTask.emit(EVENTS.AD_COMPLETE);
             Me.showTask.emit(EVENTS.AD_END);
