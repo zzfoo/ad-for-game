@@ -30,13 +30,13 @@ function requestNewAd() {
         // height: 400,
     });
 
-    currentAd.load();
+    var loadTask = currentAd.load();
 
     var EVENTS = AFG.EVENTS;
-    currentAd.once(EVENTS.LOADED, function() {
+    loadTask.once(EVENTS.LOADED, function() {
         console.log(currentAd.name + ' loaded!');
     })
-    currentAd.once(EVENTS.LOAD_ERROR, function(error) {
+    loadTask.once(EVENTS.LOAD_ERROR, function(error) {
         console.log(currentAd.name + ' load error: ', error);
     })
 }
@@ -44,18 +44,18 @@ function requestNewAd() {
 function playAd() {
     var EVENTS = AFG.EVENTS;
     if (currentAd.status === AFG.AD_STATUS.LOADED) {
-        currentAd.show();
-        currentAd.once(EVENTS.AD_START, function() {
+        var showTask = currentAd.show();
+        showTask.once(EVENTS.AD_START, function() {
             console.log('AD_START: ' + currentAd.name);
         })
-        currentAd.once(EVENTS.AD_SKIPPED, function() {
+        showTask.once(EVENTS.AD_SKIPPED, function() {
             console.log('AD_SKIPPED: ' + currentAd.name);
         })
-        currentAd.once(EVENTS.AD_END, function() {
+        showTask.once(EVENTS.AD_END, function() {
             console.log('AD_END: ' + currentAd.name);
             currentAd.load();
         })
-        currentAd.once(EVENTS.AD_CLICKED, function() {
+        showTask.once(EVENTS.AD_CLICKED, function() {
             console.log('AD_CLICKED: ' + currentAd.name);
         })
     }

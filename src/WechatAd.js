@@ -37,28 +37,23 @@ var WechatAdProto = {
         var options = this.options;
         var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ "adUnitId": options.adUnitId });
         adSingleton.onLoad(function () {
-            Me.emit(EVENTS.LOADED);
+            Me.loadTask.emit(EVENTS.LOADED);
         })
         adSingleton.onError(function (err) {
-            Me.emit(EVENTS.LOAD_ERROR, err.errMsg);
+            Me.loadTask.emit(EVENTS.LOAD_ERROR, err.errMsg);
         })
         adSingleton.onClose(function (res) {
             if (res && res.isEnded || res === undefined) {
-                this.emit(EVENTS.AD_COMPLETE);
-                this.emit(EVENTS.AD_END);
+                this.showTask.emit(EVENTS.AD_COMPLETE);
+                this.showTask.emit(EVENTS.AD_END);
             } else {
-                this.emit(EVENTS.AD_SKIPPED);
-                this.emit(EVENTS.AD_END);
+                this.showTask.emit(EVENTS.AD_SKIPPED);
+                this.showTask.emit(EVENTS.AD_END);
             }
         })
     },
-    clearTimeout: function () {
-        if (this._timeoutId) {
-            clearTimeout(this._timeoutId);
-            this._timeoutId = null;
-        }
-    },
     doShow: function () {
+        this.showTask.emit(EVENTS.AD_START);
         this.adSingleton.show();
     },
 };

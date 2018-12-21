@@ -81,8 +81,6 @@ for (var p in proto) {
 }
 
 var Ad = function () {
-    EventEmitter.call(this);
-
     this.destroyed = false;
 }
 var AdProto = {
@@ -91,17 +89,15 @@ var AdProto = {
     manager: null,
     options: null,
     _loadTimeoutId: null,
+    loadTask: null,
+    showTask: null,
     init: function (name, manager, options) {
+        this.loadTask = new EventEmitter();
+        this.showTask = new EventEmitter();
         this.name = name;
         this.manager = manager;
         this.options = options;
         this.status = AD_STATUS.FRESH;
-        this.on(EVENTS.LOADED, function() {
-            this.status = AD_STATUS.LOADED;
-        }, this);
-        this.on(EVENTS.LOAD_ERROR, function() {
-            this.status = AD_STATUS.LOAD_FAILED;
-        }, this);
         this.doInit();
     },
     // user to implement
@@ -109,31 +105,41 @@ var AdProto = {
         return;
     },
     load: function () {
+        var loadTask = this.loadTask;
+        loadTask.removeAllListeners();
         this.status = AD_STATUS.LOADING;
-        this.doLoad()
-        return;
+        this.doLoad();
+        loadTask.on(EVENTS.LOADED, function() {
+            this.status = AD_STATUS.LOADED;
+        }, this);
+        loadTask.on(EVENTS.LOAD_ERROR, function() {
+            this.status = AD_STATUS.LOAD_FAILED;
+        }, this);
+        return this.loadTask;
     },
     // user to implement
     doLoad: function() {
         var Me = this;
         setTimeout(function () {
-            Me.emit(EVENTS.LOADED);
+            Me.loadTask.emit(EVENTS.LOADED);
         }, 30);
     },
     show: function () {
+        this.showTask.removeAllListeners();
         this.doShow();
-        return;
+        return this.showTask;
     },
     // user to implement
     doShow: function() {
         setTimeout(function () {
-            Me.emit(EVENTS.AD_COMPLETE);
-            Me.emit(EVENTS.AD_END);
+            Me.showTask.emit(EVENTS.AD_COMPLETE);
+            Me.showTask.emit(EVENTS.AD_END);
         }, 30);
     },
     destroy: function () {
         this.doDestroy();
-        this.removeAllListeners();
+        this.loadTask.removeAllListeners();
+        this.showTask.removeAllListeners();
         this.name = null;
         this.options = null;
         this.manager = null;
@@ -143,9 +149,6 @@ var AdProto = {
     doDestroy: function () {
         return;
     },
-}
-for (var p in EventEmitter.prototype) {
-    Ad.prototype[p] = EventEmitter.prototype[p];
 }
 for (var p in AdProto) {
     Ad.prototype[p] = AdProto[p];

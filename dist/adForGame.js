@@ -434,8 +434,6 @@ for (var p in proto) {
 }
 
 var Ad = function () {
-    EventEmitter.call(this);
-
     this.destroyed = false;
 }
 var AdProto = {
@@ -444,17 +442,15 @@ var AdProto = {
     manager: null,
     options: null,
     _loadTimeoutId: null,
+    loadTask: null,
+    showTask: null,
     init: function (name, manager, options) {
+        this.loadTask = new EventEmitter();
+        this.showTask = new EventEmitter();
         this.name = name;
         this.manager = manager;
         this.options = options;
         this.status = AD_STATUS.FRESH;
-        this.on(EVENTS.LOADED, function() {
-            this.status = AD_STATUS.LOADED;
-        }, this);
-        this.on(EVENTS.LOAD_ERROR, function() {
-            this.status = AD_STATUS.LOAD_FAILED;
-        }, this);
         this.doInit();
     },
     // user to implement
@@ -462,31 +458,41 @@ var AdProto = {
         return;
     },
     load: function () {
+        var loadTask = this.loadTask;
+        loadTask.removeAllListeners();
         this.status = AD_STATUS.LOADING;
-        this.doLoad()
-        return;
+        this.doLoad();
+        loadTask.on(EVENTS.LOADED, function() {
+            this.status = AD_STATUS.LOADED;
+        }, this);
+        loadTask.on(EVENTS.LOAD_ERROR, function() {
+            this.status = AD_STATUS.LOAD_FAILED;
+        }, this);
+        return this.loadTask;
     },
     // user to implement
     doLoad: function() {
         var Me = this;
         setTimeout(function () {
-            Me.emit(EVENTS.LOADED);
+            Me.loadTask.emit(EVENTS.LOADED);
         }, 30);
     },
     show: function () {
+        this.showTask.removeAllListeners();
         this.doShow();
-        return;
+        return this.showTask;
     },
     // user to implement
     doShow: function() {
         setTimeout(function () {
-            Me.emit(EVENTS.AD_COMPLETE);
-            Me.emit(EVENTS.AD_END);
+            Me.showTask.emit(EVENTS.AD_COMPLETE);
+            Me.showTask.emit(EVENTS.AD_END);
         }, 30);
     },
     destroy: function () {
         this.doDestroy();
-        this.removeAllListeners();
+        this.loadTask.removeAllListeners();
+        this.showTask.removeAllListeners();
         this.name = null;
         this.options = null;
         this.manager = null;
@@ -496,9 +502,6 @@ var AdProto = {
     doDestroy: function () {
         return;
     },
-}
-for (var p in EventEmitter.prototype) {
-    Ad.prototype[p] = EventEmitter.prototype[p];
 }
 for (var p in AdProto) {
     Ad.prototype[p] = AdProto[p];
@@ -652,12 +655,6 @@ var GoogleAd = function() {
 var GoogleAdProto = {
     _adsManager: null,
     adsRenderingSettings: null,
-    doInit: function() {
-        var Me = this;
-        this.on(EVENTS.AD_END, function () {
-            Me.manager.hideContainer();
-        });
-    },
     doDestroy: function() {
         this._adsManager && this._adsManager.destroy();
         this._adsManager = null;
@@ -665,7 +662,10 @@ var GoogleAdProto = {
     },
     doLoad: function() {
         var options = this.options;
-        this._adsManager = null;
+        if (this._adsManager) {
+            this._adsManager.destroy();
+            this._adsManager = null;
+        }
         var src = "https://googleads.g.doubleclick.net/pagead/ads";
         var pageUrl = options.descriptionPage || window.location.href;
 
@@ -721,6 +721,10 @@ var GoogleAdProto = {
         });
     },
     doShow: function() {
+        var Me = this;
+        this.showTask.once(EVENTS.AD_END, function () {
+            Me.manager.hideContainer();
+        });
         this.manager.displayContainer();
 
         var options = this.options;
@@ -731,46 +735,45 @@ var GoogleAdProto = {
     },
 
     _onAdsManagerLoaded: function(adsManager) {
-        this.loaded = true;
         this._adsManager = adsManager;
 
         var Me = this;
         var AdEventType = google.ima.AdEvent.Type;
 
-        this.emit(EVENTS.LOADED);
+        this.loadTask.emit(EVENTS.LOADED);
 
         adsManager.addEventListener(AdEventType.STARTED, function () {
-            Me.emit(EVENTS.AD_START);
+            Me.showTask.emit(EVENTS.AD_START);
         });
 
         adsManager.addEventListener(AdEventType.COMPLETE, function () {
-            Me.emit(EVENTS.AD_COMPLETE);
-            Me.emit(EVENTS.AD_END);
+            Me.showTask.emit(EVENTS.AD_COMPLETE);
+            Me.showTask.emit(EVENTS.AD_END);
         });
 
         var skipped = false;
         adsManager.addEventListener(AdEventType.SKIPPED, function () {
             skipped = true;
-            Me.emit(EVENTS.AD_SKIPPED);
-            Me.emit(EVENTS.AD_END);
+            Me.showTask.emit(EVENTS.AD_SKIPPED);
+            Me.showTask.emit(EVENTS.AD_END);
         });
 
         adsManager.addEventListener(AdEventType.USER_CLOSE, function () {
             setTimeout(function () {
                 if (!skipped) {
-                    Me.emit(EVENTS.AD_COMPLETE);
-                    Me.emit(EVENTS.AD_END);
+                    Me.showTask.emit(EVENTS.AD_COMPLETE);
+                    Me.showTask.emit(EVENTS.AD_END);
                 }
             }, 100);
         });
 
         adsManager.addEventListener(AdEventType.CLICK, function () {
-            Me.emit(EVENTS.AD_CLICKED);
+            Me.showTask.emit(EVENTS.AD_CLICKED);
         });
 
     },
     _onAdsLoadError: function(error) {
-        this.emit(EVENTS.LOAD_ERROR, error);
+        this.loadTask.emit(EVENTS.LOAD_ERROR, error);
     },
 }
 for (var p in Ad.prototype) {
@@ -869,28 +872,23 @@ var WechatAdProto = {
         var options = this.options;
         var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ "adUnitId": options.adUnitId });
         adSingleton.onLoad(function () {
-            Me.emit(EVENTS.LOADED);
+            Me.loadTask.emit(EVENTS.LOADED);
         })
         adSingleton.onError(function (err) {
-            Me.emit(EVENTS.LOAD_ERROR, err.errMsg);
+            Me.loadTask.emit(EVENTS.LOAD_ERROR, err.errMsg);
         })
         adSingleton.onClose(function (res) {
             if (res && res.isEnded || res === undefined) {
-                this.emit(EVENTS.AD_COMPLETE);
-                this.emit(EVENTS.AD_END);
+                this.showTask.emit(EVENTS.AD_COMPLETE);
+                this.showTask.emit(EVENTS.AD_END);
             } else {
-                this.emit(EVENTS.AD_SKIPPED);
-                this.emit(EVENTS.AD_END);
+                this.showTask.emit(EVENTS.AD_SKIPPED);
+                this.showTask.emit(EVENTS.AD_END);
             }
         })
     },
-    clearTimeout: function () {
-        if (this._timeoutId) {
-            clearTimeout(this._timeoutId);
-            this._timeoutId = null;
-        }
-    },
     doShow: function () {
+        this.showTask.emit(EVENTS.AD_START);
         this.adSingleton.show();
     },
 };

@@ -139,12 +139,6 @@ var GoogleAd = function() {
 var GoogleAdProto = {
     _adsManager: null,
     adsRenderingSettings: null,
-    doInit: function() {
-        var Me = this;
-        this.on(EVENTS.AD_END, function () {
-            Me.manager.hideContainer();
-        });
-    },
     doDestroy: function() {
         this._adsManager && this._adsManager.destroy();
         this._adsManager = null;
@@ -152,7 +146,10 @@ var GoogleAdProto = {
     },
     doLoad: function() {
         var options = this.options;
-        this._adsManager = null;
+        if (this._adsManager) {
+            this._adsManager.destroy();
+            this._adsManager = null;
+        }
         var src = "https://googleads.g.doubleclick.net/pagead/ads";
         var pageUrl = options.descriptionPage || window.location.href;
 
@@ -208,6 +205,10 @@ var GoogleAdProto = {
         });
     },
     doShow: function() {
+        var Me = this;
+        this.showTask.once(EVENTS.AD_END, function () {
+            Me.manager.hideContainer();
+        });
         this.manager.displayContainer();
 
         var options = this.options;
@@ -218,46 +219,45 @@ var GoogleAdProto = {
     },
 
     _onAdsManagerLoaded: function(adsManager) {
-        this.loaded = true;
         this._adsManager = adsManager;
 
         var Me = this;
         var AdEventType = google.ima.AdEvent.Type;
 
-        this.emit(EVENTS.LOADED);
+        this.loadTask.emit(EVENTS.LOADED);
 
         adsManager.addEventListener(AdEventType.STARTED, function () {
-            Me.emit(EVENTS.AD_START);
+            Me.showTask.emit(EVENTS.AD_START);
         });
 
         adsManager.addEventListener(AdEventType.COMPLETE, function () {
-            Me.emit(EVENTS.AD_COMPLETE);
-            Me.emit(EVENTS.AD_END);
+            Me.showTask.emit(EVENTS.AD_COMPLETE);
+            Me.showTask.emit(EVENTS.AD_END);
         });
 
         var skipped = false;
         adsManager.addEventListener(AdEventType.SKIPPED, function () {
             skipped = true;
-            Me.emit(EVENTS.AD_SKIPPED);
-            Me.emit(EVENTS.AD_END);
+            Me.showTask.emit(EVENTS.AD_SKIPPED);
+            Me.showTask.emit(EVENTS.AD_END);
         });
 
         adsManager.addEventListener(AdEventType.USER_CLOSE, function () {
             setTimeout(function () {
                 if (!skipped) {
-                    Me.emit(EVENTS.AD_COMPLETE);
-                    Me.emit(EVENTS.AD_END);
+                    Me.showTask.emit(EVENTS.AD_COMPLETE);
+                    Me.showTask.emit(EVENTS.AD_END);
                 }
             }, 100);
         });
 
         adsManager.addEventListener(AdEventType.CLICK, function () {
-            Me.emit(EVENTS.AD_CLICKED);
+            Me.showTask.emit(EVENTS.AD_CLICKED);
         });
 
     },
     _onAdsLoadError: function(error) {
-        this.emit(EVENTS.LOAD_ERROR, error);
+        this.loadTask.emit(EVENTS.LOAD_ERROR, error);
     },
 }
 for (var p in Ad.prototype) {

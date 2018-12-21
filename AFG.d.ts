@@ -21,11 +21,11 @@ declare namespace AFG {
         createAd(options, name?);
         destroyAd(ad);
     }
-    export class Ad extends EventEmitter {
+    export class Ad {
         name: string;
         status: string;
-        load();
-        show();
+        load(): EventEmitter;
+        show(): EventEmitter;
     }
     export interface GoogleAdManagerOptions {
         containerElement,
