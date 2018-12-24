@@ -876,15 +876,15 @@ var WechatAdProto = {
 
         if (!adSingletonInited) {
             adSingleton.onLoad(function () {
-                console.log('wechat ad on load');
+                // console.log('wechat ad on load');
                 Me.loadTask.emit(EVENTS.LOADED);
             })
             adSingleton.onError(function (err) {
-                console.log('wechat ad on error');
+                // console.log('wechat ad on error');
                 Me.loadTask.emit(EVENTS.LOAD_ERROR, err.errMsg);
             })
             adSingleton.onClose(function (res) {
-                console.log('wechat ad on close');
+                // console.log('wechat ad on close');
                 if (res && res.isEnded || res === undefined) {
                     Me.showTask.emit(EVENTS.AD_COMPLETE);
                     Me.showTask.emit(EVENTS.AD_END);
