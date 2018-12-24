@@ -880,11 +880,11 @@ var WechatAdProto = {
         })
         adSingleton.onClose(function (res) {
             if (res && res.isEnded || res === undefined) {
-                this.showTask.emit(EVENTS.AD_COMPLETE);
-                this.showTask.emit(EVENTS.AD_END);
+                Me.showTask.emit(EVENTS.AD_COMPLETE);
+                Me.showTask.emit(EVENTS.AD_END);
             } else {
-                this.showTask.emit(EVENTS.AD_SKIPPED);
-                this.showTask.emit(EVENTS.AD_END);
+                Me.showTask.emit(EVENTS.AD_SKIPPED);
+                Me.showTask.emit(EVENTS.AD_END);
             }
         })
     },
