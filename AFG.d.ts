@@ -51,7 +51,9 @@ declare namespace AFG {
     export interface WechatAdManagerOptions {
     }
     export interface WechatAdOptions {
+        wx?,
         adUnitId?,
+        appSid?,
     }
     export class WechatAdManager extends AdManager {
     }

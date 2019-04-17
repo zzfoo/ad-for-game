@@ -872,7 +872,8 @@ var WechatAdProto = {
         var Me = this;
         var options = this.options;
         var adSingletonInited = !!this.adSingleton;
-        var adSingleton = this.adSingleton = wx.createRewardedVideoAd({ "adUnitId": options.adUnitId });
+        var wx = options.wx || window['wx']
+        var adSingleton = this.adSingleton = wx.createRewardedVideoAd(options);
 
         if (!adSingletonInited) {
             adSingleton.onLoad(function () {
