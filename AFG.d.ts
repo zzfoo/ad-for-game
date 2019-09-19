@@ -59,4 +59,15 @@ declare namespace AFG {
     }
     export class WechatAd extends Ad {
     }
+    export interface HippoAdManagerOptions {
+        HippoAdSDK?,
+        adIds?,
+    }
+    export interface HippoAdOptions {
+        adId?,
+    }
+    export class HippoAdManager extends AdManager {
+    }
+    export class HippoAd extends Ad {
+    }
 }
