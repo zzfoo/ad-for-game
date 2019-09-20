@@ -49,7 +49,7 @@ var proto = {
         }
     },
     createAd: function (options, name) {
-        var ad = this.doCreateAd();
+        var ad = this.doCreateAd(options);
         name = name || this._generateName();
         ad.init(name, this, options);
         this._adCache[name] = ad;

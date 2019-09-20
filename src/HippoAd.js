@@ -33,8 +33,10 @@ var HippoAdManagerProto = {
     }
   },
 
-  doCreateAd: function () {
-    return new HippoAd();
+  doCreateAd: function (options) {
+    var ad = new HippoAd()
+    this.allAds[options.adId] = ad
+    return ad
   },
 };
 
