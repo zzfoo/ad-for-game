@@ -24,9 +24,9 @@ var HippoAdManagerProto = {
   onAdLoaded(id, success) {
     if (this.allAds[id]) {
       if (success) {
-        this.allAds[id].emit(EVENTS.LOADED)
+        this.allAds[id].loadTask.emit(EVENTS.LOADED)
       } else {
-        this.allAds[id].emit(EVENTS.LOAD_ERROR)
+        this.allAds[id].loadTask.emit(EVENTS.LOAD_ERROR)
       }
     } else {
       this.adStatus[id] = success ? EVENTS.LOADED : EVENTS.LOAD_ERROR
