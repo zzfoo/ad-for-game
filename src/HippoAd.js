@@ -8,13 +8,29 @@ var HippoAdManager = function () {
 }
 
 var HippoAdManagerProto = {
+  adStatus: null,
+  allAds: null,
   doInit: function (callback) {
+    this.adStatus = {}
+    this.allAds = {}
     var HippoAdSDK = this.options.HippoAdSDK
     var adIds = this.options.adIds
-    HippoAdSDK.initRewardedVideoAd(adIds, function (hippoPlacementId, success) {
-      var err = success ? null : 'HippoAdSDK initRewardedVideoAd error';
-      callback(err)
-    });
+    HippoAdSDK.initRewardedVideoAd(adIds, this.onAdLoaded.bind(this));
+    setTimeout(function() {
+        callback(null)
+    }, 20);
+  },
+
+  onAdLoaded(id, success) {
+    if (this.allAds[id]) {
+      if (success) {
+        this.allAds[id].emit(EVENTS.LOADED)
+      } else {
+        this.allAds[id].emit(EVENTS.LOAD_ERROR)
+      }
+    } else {
+      this.adStatus[id] = success ? EVENTS.LOADED : EVENTS.LOAD_ERROR
+    }
   },
 
   doCreateAd: function () {
@@ -34,12 +50,12 @@ var HippoAd = function () {
 }
 
 var HippoAdProto = {
-  adSingleton: null,
   doLoad: function () {
     var Me = this;
-    setTimeout(function () {
-      Me.loadTask.emit(EVENTS.LOADED);
-    }, 60)
+    if (this.manager.adStatus[this.options.adId]) {
+      Me.loadTask.emit(adStatus[this.options.adId]);
+      this.manager.adStatus[this.options.adId] = null
+    }
   },
   doShow: function () {
     var Me = this
