@@ -8,8 +8,8 @@ var UpltvAdManager = function () {
 }
 
 var UpltvAdManagerProto = {
-  ads = {},
-  haveLoadHandler = false,
+  ads: {},
+  haveLoadHandler: false,
 
   doInit: function (callback) {
     const Me = this
