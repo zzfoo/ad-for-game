@@ -59,7 +59,6 @@ var UpltvAdManagerProto = {
     return ad
   },
 };
-dylangen
 for (var p in AdManager.prototype) {
   UpltvAdManager.prototype[p] = AdManager.prototype[p];
 }
