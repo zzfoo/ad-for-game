@@ -35,10 +35,10 @@ var UpltvAdManagerProto = {
 
     // 设置加载回调
     upltv.setRewardVideoLoadCallback(function (Ad_Unit_ID, msg) {
-      cc.log("===> Upltv load video ad Success, unit-id:", Ad_Unit_ID);
+      console.log("===> Upltv load video ad Success, unit-id:", Ad_Unit_ID);
       console.log('msg:', msg)
     }, function (Ad_Unit_ID, msg) {
-      cc.log("===> Upltv load video ad Fail, unit-id:", Ad_Unit_ID);
+      console.log("===> Upltv load video ad Fail, unit-id:", Ad_Unit_ID);
       console.log('msg:', msg)
     });
 
@@ -59,7 +59,7 @@ var UpltvAdManagerProto = {
     return ad
   },
 };
-
+dylangen
 for (var p in AdManager.prototype) {
   UpltvAdManager.prototype[p] = AdManager.prototype[p];
 }
@@ -108,7 +108,7 @@ var UpltvAdProto = {
       Me.showTask.emit(EVENTS.AD_END);
       event = "Did_Abandon_Reward";
     }
-    cc.log("===> js RewardVideo Show Callback, event: %s, at: %s", event, Ad_Unit_ID);
+    console.log("===> js RewardVideo Show Callback, event: %s, at: %s", event, Ad_Unit_ID);
   },
 
 };
