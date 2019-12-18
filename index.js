@@ -2,6 +2,7 @@ var base = require('./src/Ad.js');
 var GoogleBase = require('./src/GoogleAd.js');
 var WechatBase = require('./src/WechatAd.js');
 var HippoBase = require('./src/HippoAd.js');
+var UpltvBase = require('./src/UpltvAd.js');
 module.exports = {
     EVENTS: base.EVENTS,
     AD_STATUS: base.AD_STATUS,
@@ -13,4 +14,6 @@ module.exports = {
     WechatAd: WechatBase.WechatAd,
     HippoAdManager: HippoBase.HippoAdManager,
     HippoAd: HippoBase.HippoAd,
+    UpltvAdManager: UpltvBase.UpltvAdManager,
+    UpltvAd: UpltvBase.UpltvAd,
 };
